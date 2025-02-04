@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>ardagv_motor</name>
+  <version>0.0.0</version>
+  <description>Motor control node for AGV motor control boards</description>
+  <maintainer email="ioan.dragomir@analog.com">Ioan Dragomir</maintainer>
+  <license>TODO: License declaration</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <depend>canopen</depend>
+  <depend>canopen_402_driver</depend>
+  <depend>canopen_master_driver</depend>
+  <depend>diff_drive_controller</depend>
+  <depend>controller_manager</depend>
+
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

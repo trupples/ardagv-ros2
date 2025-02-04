@@ -1,0 +1,72 @@
+options:
+  dcf_path: "@BUS_CONFIG_PATH@"
+
+master:
+  node_id: 1
+  driver: "ros2_canopen::MasterDriver"
+  package: "canopen_master_driver"
+  baudrate: 500000
+  sync_period: 10000 # us
+
+defaults:
+  dcf: "ardagvmotor.eds"
+  driver: "ros2_canopen::Cia402Driver"
+  package: "canopen_402_driver"
+  period: 10 # ms
+  heartbeat_producer: 100 # Heartbeat every 100 ms
+  sdo: # SDO executed during config
+    - { index: 0x1017, sub_index: 0, value: 500 } # Heartbeat every 500ms
+  tpdo:
+    1:
+      enabled: true
+      cob_id: "auto"
+      mapping:
+        - {index: 0x6041, sub_index: 0} # status word
+    2:
+      enabled: true
+      cob_id: "auto"
+      mapping:
+        - {index: 0x6041, sub_index: 0} # status word
+        - {index: 0x6061, sub_index: 0} # modes of operation display
+    3:
+      enabled: true
+      cob_id: "auto"
+      mapping:
+        - {index: 0x6041, sub_index: 0} # status word
+        - {index: 0x6064, sub_index: 0} # position actual value
+    4:
+      enabled: true
+      cob_id: "auto"
+      mapping:
+        - {index: 0x6041, sub_index: 0} # status word
+        - {index: 0x606C, sub_index: 0} # velocity actual value
+  rpdo:
+    1:
+      enabled: true
+      cob_id: "auto"
+      mapping:
+        - {index: 0x6040, sub_index: 0} # controlword
+    2:
+      enabled: true
+      cob_id: "auto"
+      mapping:
+        - {index: 0x6040, sub_index: 0} # controlword
+        - {index: 0x6060, sub_index: 0} # Modes of operation
+    3:
+      enabled: false
+      cob_id: "auto"
+      mapping:
+        - {index: 0x6040, sub_index: 0} # controlword
+    4:
+      enabled: true
+      cob_id: "auto"
+      mapping:
+        - {index: 0x6040, sub_index: 0} # controlword
+        - {index: 0x60FF, sub_index: 0} # target velocity
+nodes:
+  joint_left:
+    node_id: 0x15
+
+  joint_right:
+    node_id: 0x16
+

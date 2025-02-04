@@ -1,0 +1,20 @@
+controller_manager:
+  ros__parameters:
+    update_rate: 100  # Hz
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+    diff_drive_controller:
+      type: diff_drive_controller/DiffDriveController
+
+diff_drive_controller:
+  ros__parameters:
+    left_wheel_names: ["left_wheel_joint"]
+    right_wheel_names: ["right_wheel_joint"]
+    interface_name: velocity
+
+    wheel_separation: 0.3 # TODO
+    wheel_radius: 0.05 # TODO
+
+    # position_feedback: true # TODO(ioan): do we actually have usable position feedback?
+
