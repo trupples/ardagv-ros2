@@ -10,31 +10,6 @@ def generate_launch_description():
     robot_description_filename = os.path.join(get_package_share_directory("ardagvmotor"), "urdf", "robot.urdf")
     robot_description_string = open(robot_description_filename).read()
 
-    # canopen_core master
-    """
-    canopen_master = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            [
-                os.path.join(get_package_share_directory("canopen_core"), "launch"),
-                "/canopen.launch.py",
-            ]
-        ),
-        launch_arguments={
-            "master_config": os.path.join(
-                get_package_share_directory("ardagvmotor"),
-                "config",
-                "master.dcf",
-            ),
-            "bus_config": os.path.join(
-                get_package_share_directory("ardagvmotor"),
-                "config",
-                "bus.yml",
-            ),
-            "can_interface_name": "can0",
-        }.items(),
-    )
-    """
-
     # ros2_control controller_manager
     robot_control_config = os.path.join(get_package_share_directory("ardagvmotor"), "config", "ros2_controllers.yaml")
     controller_manager = Node(
@@ -60,16 +35,16 @@ def generate_launch_description():
     spawners = []
     for to_spawn in [
         "joint_state_broadcaster",
-        #"diff_drive_controller",
+        "diff_drive_controller",
         #"cia402_controller_left",
         #"cia402_controller_right",
-        "forward_velocity_controller"
+        #"forward_velocity_controller"
         ]:
-        spawner_node = Node(
+        spawner_node = TimerAction(period=5.0, actions=[Node(
                 package = "controller_manager",
                 executable = "spawner",
                 arguments = [to_spawn, "--controller-manager", "/controller_manager"],
-        )
+        )])
         spawners.append(spawner_node)
 
     return LaunchDescription([

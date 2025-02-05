@@ -7,13 +7,22 @@ master:
   package: "canopen_master_driver"
   baudrate: 500000
   sync_period: 10000 # us
+  start: true
+  start_nodes: true
+  start_all_nodes: true
+  boot_time: 1000
+  boot_timeout: 1000
 
 defaults:
+  product_code: 0
   dcf: "ardagvmotor.eds"
   driver: "ros2_canopen::Cia402Driver"
   package: "canopen_402_driver"
   period: 10 # ms
   heartbeat_producer: 100 # Heartbeat every 100 ms
+  boot: false
+  mandatory: true
+  velocity_mode: 3
   sdo: # SDO executed during config
     - { index: 0x1017, sub_index: 0, value: 500 } # Heartbeat every 500ms
   tpdo:
@@ -64,9 +73,9 @@ defaults:
         - {index: 0x6040, sub_index: 0} # controlword
         - {index: 0x60FF, sub_index: 0} # target velocity
 nodes:
-  joint_left:
-    node_id: 0x15
+  motor_left:
+    node_id: 0x14
 
-  joint_right:
+  motor_right:
     node_id: 0x16
 

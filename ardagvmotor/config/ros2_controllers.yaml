@@ -1,16 +1,47 @@
 controller_manager:
   ros__parameters:
     update_rate: 100  # Hz
+
     joint_state_broadcaster:
       type: joint_state_broadcaster/JointStateBroadcaster
 
     diff_drive_controller:
       type: diff_drive_controller/DiffDriveController
 
+    forward_velocity_controller:
+      type: forward_command_controller/ForwardCommandController
+
+    #cia402_controller_left:
+    #  type: canopen_ros2_controllers/Cia402DeviceController
+    #
+    #  command_interfaces:
+    #    - velocity
+    #
+    #cia402_controller_right:
+    #  type: canopen_ros2_controllers/Cia402DeviceController
+    #
+    #  command_interfaces:
+    #    - velocity
+
+#cia402_controller_left:
+#  ros__parameters:
+#    joint: wheel_left
+#
+#cia402_controller_right:
+#  ros__parameters:
+#    joint: wheel_right
+
+forward_velocity_controller:
+  ros__parameters:
+    joints:
+      - wheel_left
+      - wheel_right
+    interface_name: velocity
+
 diff_drive_controller:
   ros__parameters:
-    left_wheel_names: ["left_wheel_joint"]
-    right_wheel_names: ["right_wheel_joint"]
+    left_wheel_names: ["wheel_left"]
+    right_wheel_names: ["wheel_right"]
     interface_name: velocity
 
     wheel_separation: 0.3 # TODO

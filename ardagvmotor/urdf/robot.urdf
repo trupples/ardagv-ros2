@@ -1,0 +1,117 @@
+<robot name="robot">
+
+
+        <ros2_control name="ArduinoAGVControl" type="system">
+          <hardware>
+            <plugin>canopen_ros2_control/RobotSystem</plugin>
+            <param name="bus_config">/home/runner/ros2_ws/install/ardagvmotor/share/ardagvmotor/config/bus.yml</param>
+            <param name="master_config">/home/runner/ros2_ws/install/ardagvmotor/share/ardagvmotor/config/master.dcf</param>
+            <param name="can_interface_name">can0</param>
+            <param name="master_bin"></param>
+          </hardware>
+          <joint name="wheel_left">
+            <command_interface name="velocity"/>
+            <param name="device_name">motor_left</param>
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+          </joint>
+          <joint name="wheel_right">
+            <command_interface name="velocity"/>
+            <param name="device_name">motor_right</param>
+            <state_interface name="position"/>
+            <state_interface name="velocity"/>
+          </joint>
+        </ros2_control>
+
+  <link name="base_footprint"></link>
+  <joint name="base_joint" type="fixed">
+    <parent link="base_footprint" />
+    <child link="base_link" />
+    <origin xyz="0 0 0.1" rpy="0 0 0" />
+  </joint>
+  <link name="base_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <box size="0.5 0.3 0.2" />
+      </geometry>
+      <material name="base_link-material">
+        <color rgba="0.5271151256969157 0.5271151256969157 0.5271151256969157 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <box size="0.5 0.3 0.2" />
+      </geometry>
+    </collision>
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="1" />
+      <inertia ixx="0.16666666666666666" ixy="0" ixz="0" iyy="0.16666666666666666" iyz="0" izz="0.16666666666666666" />
+    </inertial>
+  </link>
+  <joint name="wheel_left" type="continuous">
+    <parent link="base_link" />
+    <child link="left_wheel" />
+    <origin xyz="0 0.16 -0.05" rpy="1.570796326794897 0 0" />
+    <command_interface name="velocity">
+      <param name="min">-4000</param>
+      <param name="max">4000</param>
+    </command_interface>
+  </joint>
+  <link name="left_wheel">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <cylinder radius="0.05" length="0.01" />
+      </geometry>
+      <material name="left_wheel-material">
+        <color rgba="0.21223075740342198 0.21586050010324417 0.41254261347374327 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <cylinder radius="0.05" length="0.01" />
+      </geometry>
+    </collision>
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="1" />
+      <inertia ixx="0.3333333333333333" ixy="0" ixz="0" iyy="0.5" iyz="0" izz="0.3333333333333333" />
+    </inertial>
+  </link>
+  <joint name="wheel_right" type="continuous">
+    <parent link="base_link" />
+    <child link="right_wheel" />
+    <origin xyz="0 -0.16 -0.05" rpy="1.570796326794897 0 0" />
+    <command_interface name="velocity">
+      <param name="min">-4000</param>
+      <param name="max">4000</param>
+    </command_interface>
+  </joint>
+  <link name="right_wheel">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <cylinder radius="0.05" length="0.01" />
+      </geometry>
+      <material name="right_wheel-material">
+        <color rgba="0.21223075740342198 0.21586050010324417 0.41254261347374327 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <cylinder radius="0.05" length="0.01" />
+      </geometry>
+    </collision>
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="1" />
+      <inertia ixx="0.3333333333333333" ixy="0" ixz="0" iyy="0.5" iyz="0" izz="0.3333333333333333" />
+    </inertial>
+  </link>
+</robot>
+
