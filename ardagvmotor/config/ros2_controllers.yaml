@@ -5,31 +5,12 @@ controller_manager:
     joint_state_broadcaster:
       type: joint_state_broadcaster/JointStateBroadcaster
 
+    # Either the differential drive or the forward command controller will be spawned, it doesn't make much sense to use both at once. The two launch files only differ in which one they launch.
     diff_drive_controller:
       type: diff_drive_controller/DiffDriveController
 
     forward_velocity_controller:
       type: forward_command_controller/ForwardCommandController
-
-    #cia402_controller_left:
-    #  type: canopen_ros2_controllers/Cia402DeviceController
-    #
-    #  command_interfaces:
-    #    - velocity
-    #
-    #cia402_controller_right:
-    #  type: canopen_ros2_controllers/Cia402DeviceController
-    #
-    #  command_interfaces:
-    #    - velocity
-
-#cia402_controller_left:
-#  ros__parameters:
-#    joint: wheel_left
-#
-#cia402_controller_right:
-#  ros__parameters:
-#    joint: wheel_right
 
 forward_velocity_controller:
   ros__parameters:

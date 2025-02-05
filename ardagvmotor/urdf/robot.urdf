@@ -1,11 +1,12 @@
 <robot name="robot">
-
-
+	<!-- Dark magic, don't touch -->
         <ros2_control name="ArduinoAGVControl" type="system">
           <hardware>
             <plugin>canopen_ros2_control/RobotSystem</plugin>
             <param name="bus_config">/home/runner/ros2_ws/install/ardagvmotor/share/ardagvmotor/config/bus.yml</param>
             <param name="master_config">/home/runner/ros2_ws/install/ardagvmotor/share/ardagvmotor/config/master.dcf</param>
+
+		<!-- Ok, you may touch this one: -->
             <param name="can_interface_name">can0</param>
             <param name="master_bin"></param>
           </hardware>
@@ -22,6 +23,8 @@
             <state_interface name="velocity"/>
           </joint>
         </ros2_control>
+
+	<!-- </dark magic>, you may safely play around with what follows -->
 
   <link name="base_footprint"></link>
   <joint name="base_joint" type="fixed">

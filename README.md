@@ -1,6 +1,112 @@
 # Arduino AGV platform
 
+# ROS2 nodes
+
+Unless otherwise specified, these commands must be run from inside a ros2 docker container, with the ros2 workspace loaded.
+
+## IMU
+
+```
+ros2 run imu_ros2 imu_ros2_node --ros-args -p iio_context_string:="ip:localhost"
+```
+
+If that doesn't work, run `sudo systemctl restart iiod` outside of the container.
+
+## Motor control
+
+Uses ros2_control framework. Currently tested with a [forward velocity controller](https://control.ros.org/master/doc/ros2_controllers/forward_command_controller/doc/userdoc.html), and a [differential drive controller](https://control.ros.org/master/doc/ros2_controllers/diff_drive_controller/doc/userdoc.html).
+
+### ros2_control differential drive
+
+Differential drive inverse kinematics.
+
+```
+ros2 launch ardagvmotor diffdrive.launch.py
+```
+
+CAREFUL, running this should make your robot move:
+```
+ros2 topic pub /diff_drive_controller/cmd_vel geometry_msgs/msg/TwistStamped '{"header":{"stamp":{"sec":0,"nanosec":0},"frame_id":"base_link"},"twist":{
+        "linear":{"x":1.0,"y":0.0,"z":0.0},
+        "angular":{"x":0.0,"y":0.0,"z":0.0}
+}}'
+```
+
+### ros2_control forward velocity control
+
+No inverse kinematics, just set the velocity and go. Values of -4000 ... 4000 roughly correspond to -180 ... 180 RPM. Values outside of this interval are invalid.
+
+```
+ros2 launch ardagvmotor forward_velocity_control.launch.py
+```
+
+CAREFUL, running this should make your robot move:
+```
+ros2 topic pub /forward_velocity_controller/commands std_msgs/msg/Float64MultiArray '{data: [1000, 1000]}'
+```
+
+
+### Direct access to the CANopen drives
+
+If you want to bypass ros2_control, you may start the "raw" CiA 402 nodes using:
+
+```
+ros2 launch canopen_core canopen.launch.py bus_config:=/home/runner/ros2_ws/install/ardagvmotor/share/ardagvmotor/config/bus.yml master_config:=/home/runner/ros2_ws/install/ardagvmotor/share/ardagvmotor/config/master.dcf can_interface_name:=can0 node_id:=1
+```
+
+Initialize the motor:  
+```
+ros2 service call motor_right/init std_srvs/Trigger '{}'
+ros2 service call motor_right/velocity_mode std_srvs/Trigger '{}'
+```
+
+Control motor with a speed between -4000 and 4000 (corresponding to an approx 180 RPM maximum in either direction):
+```
+ros2 service call motor_right/target canopen_interfaces/srv/COTargetDouble '{"target": 500}'
+```
+
+### Dislike ROS?
+
+Here's a basic python example to get you started with spinning the motors without *any* ROS2 usage, just using the `python-canopen` package. Can be run outside of a docker container, if you so wish:
+
+```python
+import canopen
+from canopen.profiles.p402 import BaseNode402
+
+node = BaseNode402(0x16, 'ardagvmotor.eds')
+network = canopen.Network()
+network.connect(channel='can0', interface='socketcan', bitrate=500000)
+network.add_node(node)
+
+network.sync.start(0.1)
+
+node.nmt.state = 'RESET'
+node.nmt.wait_for_bootup(5)
+node.load_configuration()
+node.setup_402_state_machine()
+node.nmt.state = 'OPERATIONAL' # Start CANopen node
+
+def set_speed(v): # v = -1 ... 1
+    v = int(v * 4000000) # Convert to internal speed units, +-4e6
+    node.rpdo[4]['Controlword'].raw = 0b1111
+    node.rpdo[4]['Target velocity'].raw = v
+    node.rpdo[4].transmit()
+
+# Power on the motors
+node.state = 'OPERATION ENABLED'
+
+set_speed(0.5)
+time.sleep(1)
+set_speed(-0.5)
+time.sleep(1)
+
+# Power off the motors
+node.state = 'SWITCH ON DISABLED'
+```
+
 # Portenta linux bringup
+
+In case you fry your portenta and need to start over.
 
 ## Flash portenta
 
@@ -156,7 +262,7 @@ sudo systemctl start docker
 
 ## Bring up docker container
 
-Create a docker container based on `shooteu/portenta-ros2` and the following flags:  
+Create a docker container based on `shooteu/portenta-ros2` and the following flags:  
 
 ```
 docker run -it --network=host shooteu/portenta-ros2
@@ -169,39 +275,4 @@ Inside the container, enter the ros2 workspace, and load it:
 ```
 cd ros2_ws
 source install/setup.sh
-```
-
-## Have fun with the robot
-
-### ToF node
-
-Outside the container, run `/home/analog/Workspace/media_config_16D_16AB_8C.sh` to initialize the ToF camera. This is required once per reboot.
-
-Inside the container, with the ros2 workspace loaded:
-
-```
-ros2 launch adi_3dtof_adtf31xx adi_3dtof_adtf31xx_launch.py
-```
-
-## IMU node
-
-```
-ros2 run imu_ros2 imu_ros2_node --ros-args -p iio_context_string:="ip:localhost"
-```
-
-### Motor control node
-
-```
-ros2 launch canopen_core canopen.launch.py bus_config:=/home/analog/ros2_ws/install/ardagvmotor/share/ardagvmotor/config/bus.yml master_config:=/home/analog/ros2_ws/install/ardagvmotor/share/ardagvmotor/config/master.dcf can_interface_name:=can0 node_id:=1
-```
-
-Initialize motor:  
-```
-ros2 service call right_wheel_joint/init std_srvs/Trigger '{}'
-ros2 service call right_wheel_joint/velocity_mode std_srvs/Trigger '{}'
-```
-
-Control motor with a speed between -4000 and 4000 (corresponding to an approx 180 RPM maximum in either direction):
-```
-ros2 service call right_wheel_joint/target canopen_interfaces/srv/COTargetDouble '{"target": 500}'
 ```
