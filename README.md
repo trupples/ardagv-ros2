@@ -17,10 +17,10 @@ Unless otherwise specified, these commands must be run from inside a ros2 docker
 ## IMU
 
 ```
-ros2 run imu_ros2 imu_ros2_node --ros-args -p iio_context_string:="ip:localhost"
+ros2 run imu_ros2 imu_ros2_node --ros-args -p iio_context_string:="local:"
 ```
 
-If that doesn't work, run `sudo systemctl restart iiod` outside of the container.
+If running from a non `--privileged` container (more specifically, if `/sys/bus/iio` is not available to the docker container), replace "local:" with "ip:localhost" and make sure the `iiod` service runs outside the container.
 
 ## Motor control
 
