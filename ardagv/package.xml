@@ -1,21 +1,26 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>ardagvmotor</name>
+  <name>ardagv</name>
   <version>0.0.0</version>
-  <description>Motor control node for AGV motor control boards</description>
-  <maintainer email="ioan.dragomir@analog.com">Ioan Dragomir</maintainer>
+  <description>TODO: Package description</description>
+  <maintainer email="runner@todo.todo">runner</maintainer>
   <license>TODO: License declaration</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
-  <depend>canopen</depend>
-  <depend>canopen_402_driver</depend>
-  <depend>canopen_master_driver</depend>
+  <!-- Our components: -->
+  <depend>ardagv_crsf</depend>
+  <depend>imu_ros2</depend>
+  <depend>adi_3dtof_adtf31xx</depend>
+  <depend>ardagv_motors</depend>
+
+  <!-- 3rd party components: -->
   <depend>canopen_ros2_control</depend>
-  <depend>canopen_ros2_controllers</depend>
   <depend>diff_drive_controller</depend>
+  <depend>forward_command_controller</depend>
   <depend>controller_manager</depend>
+  <depend>xacro</depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>

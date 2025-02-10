@@ -27,7 +27,7 @@ defaults:
     - { index: 0x1017, sub_index: 0, value: 500 } # Heartbeat every 500ms
   tpdo:
     1:
-      enabled: true
+      enabled: false # XXX
       cob_id: "auto"
       mapping:
         - {index: 0x6041, sub_index: 0} # status word
@@ -51,7 +51,7 @@ defaults:
         - {index: 0x606C, sub_index: 0} # velocity actual value
   rpdo:
     1:
-      enabled: true
+      enabled: false # XXX
       cob_id: "auto"
       mapping:
         - {index: 0x6040, sub_index: 0} # controlword
@@ -70,17 +70,17 @@ defaults:
       enabled: true
       cob_id: "auto"
       mapping:
-        - {index: 0x6040, sub_index: 0} # controlword
+        # XXX - {index: 0x6040, sub_index: 0} # controlword
         - {index: 0x60FF, sub_index: 0} # target velocity
 nodes:
-  motor_left:
+  ardagv_motor_left:
     node_id: 0x16
     scale_pos_to_dev: -521519.0
     scale_vel_to_dev: -221207.0
     scale_pos_from_dev: -1.917475982666016e-06
     scale_vel_from_dev: -4.712388975e-06
 
-  motor_right:
+  ardagv_motor_right:
     node_id: 0x14
     scale_pos_to_dev: 521519.0
     scale_vel_to_dev: 221207.0
