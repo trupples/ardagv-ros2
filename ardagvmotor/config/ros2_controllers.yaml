@@ -25,8 +25,8 @@ diff_drive_controller:
     right_wheel_names: ["wheel_right"]
     interface_name: velocity
 
-    wheel_separation: 0.3 # TODO
-    wheel_radius: 0.05 # TODO
+    wheel_separation: 0.27
+    wheel_radius: 0.05
 
     # position_feedback: true # TODO(ioan): do we actually have usable position feedback?
 

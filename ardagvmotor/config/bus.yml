@@ -74,8 +74,16 @@ defaults:
         - {index: 0x60FF, sub_index: 0} # target velocity
 nodes:
   motor_left:
-    node_id: 0x15
+    node_id: 0x16
+    scale_pos_to_dev: -521519.0
+    scale_vel_to_dev: -221207.0
+    scale_pos_from_dev: -1.917475982666016e-06
+    scale_vel_from_dev: -4.712388975e-06
 
   motor_right:
-    node_id: 0x16
+    node_id: 0x14
+    scale_pos_to_dev: 521519.0
+    scale_vel_to_dev: 221207.0
+    scale_pos_from_dev: 1.917475982666016e-06
+    scale_vel_from_dev: 4.712388975e-06
 
