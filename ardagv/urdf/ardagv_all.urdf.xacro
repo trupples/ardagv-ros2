@@ -2,7 +2,7 @@
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="ardagv">
 	<xacro:arg name="name" default="ardagv" /> <!-- prefix for all URDF names -->
 	<xacro:arg name="config_dir" default="$(find ardagv)/config/" /> <!-- Install directory containing CANopen config, .dcf files -->
-	<xacro:arg name="can_iface" default="can0" />
+	<xacro:arg name="can_iface" default="can1" />
 
 	<xacro:include filename="$(find ardagv)/urdf/ardagv_ros2_control.urdf.xacro" />
 	<xacro:include filename="$(find ardagv)/urdf/ardagv_model.urdf.xacro" />

@@ -11,7 +11,7 @@ from launch.substitutions import LaunchConfiguration, Command, PathJoinSubstitut
 def generate_launch_description():
     # Declare launch arguments
     decl_name = DeclareLaunchArgument('name', default_value='ardagv')
-    decl_can_iface = DeclareLaunchArgument('can_iface', default_value='can0')
+    decl_can_iface = DeclareLaunchArgument('can_iface', default_value='can1')
     decl_config_dir = DeclareLaunchArgument('config_dir', default_value=os.path.join(get_package_share_directory("ardagv_motors"), "config"))
     decl_controller = DeclareLaunchArgument('controller', default_value='diff_drive_controller')
 
