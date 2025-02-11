@@ -1,11 +1,11 @@
-controller_manager:
+ardagv_controller_manager:
   ros__parameters:
-    update_rate: 100  # Hz
+    update_rate: 50  # Hz
 
     joint_state_broadcaster:
       type: joint_state_broadcaster/JointStateBroadcaster
 
-    # Either the differential drive or the forward command controller will be spawned, it doesn't make much sense to use both at once. The two launch files only differ in which one they launch.
+    # When launching just_motors.launch.py, choose between 'controller:=diff_drive_controller' (default) and 'controller:=forward_velocity_controller', or another controller you may add here.
     diff_drive_controller:
       type: diff_drive_controller/DiffDriveController
 
@@ -15,18 +15,19 @@ controller_manager:
 forward_velocity_controller:
   ros__parameters:
     joints:
-      - wheel_left
-      - wheel_right
+      - motor_left
+      - motor_right
     interface_name: velocity
 
 diff_drive_controller:
   ros__parameters:
-    left_wheel_names: ["wheel_left"]
-    right_wheel_names: ["wheel_right"]
+    left_wheel_names: ["motor_left"]
+    right_wheel_names: ["motor_right"]
     interface_name: velocity
 
+    # Update with your robot's measurements
     wheel_separation: 0.27
     wheel_radius: 0.05
 
-    # position_feedback: true # TODO(ioan): do we actually have usable position feedback?
+    position_feedback: false # TODO(ioan): do we actually have usable position feedback?
 

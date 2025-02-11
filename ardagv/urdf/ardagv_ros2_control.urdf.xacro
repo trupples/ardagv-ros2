@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+<xacro:macro name="ardagv_ros2_control" params="name config_dir can_iface">
+<ros2_control name="${name}_control" type="system">
+  <hardware>
+    <plugin>canopen_ros2_control/RobotSystem</plugin>
+    <param name="bus_config">${config_dir}/bus.yml</param>
+    <param name="master_config">${config_dir}/master.dcf</param>
+    <param name="can_interface_name">${can_iface}</param>
+    <param name="master_bin"></param>
+  </hardware>
+  <joint name="motor_left"> <!-- must correspond to joint defined in ardagv_model.urdf -->
+    <command_interface name="velocity"/>
+    <param name="device_name">drive_left</param> <!-- must correspond to node name which controls this joint -->
+    <state_interface name="position"/>
+    <state_interface name="velocity"/>
+  </joint>
+  <joint name="motor_right">
+    <command_interface name="velocity"/>
+    <param name="device_name">drive_right</param>
+    <state_interface name="position"/>
+    <state_interface name="velocity"/>
+  </joint>
+</ros2_control>
+</xacro:macro>
+</robot>
+

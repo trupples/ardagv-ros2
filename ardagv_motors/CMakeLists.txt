@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(ardagvmotor)
+project(ardagv_motors)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -23,13 +23,5 @@ if(BUILD_TESTING)
 endif()
 
 cogen_dcf(.)
-install(DIRECTORY
-	launch
-	DESTINATION share/${PROJECT_NAME})
-
-install(DIRECTORY
-	urdf
-	DESTINATION share/${PROJECT_NAME})
-
 
 ament_package()
