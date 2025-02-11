@@ -2,10 +2,10 @@
 
 Connect to the Portenta X8 using hostname `portenta-arduino`, username `analog`, password `analog`.
 
-All relevant ros2 nodes are built inside the [shooteu/ros2-built-all](https://hub.docker.com/r/shooteu/ros2-built-all) docker image. Should be run with `--privileged` and `--network=host`:
+All relevant ros2 nodes are built inside the [shooteu/complete-agv-setup](https://hub.docker.com/r/shooteu/complete-agv-setup) docker image. Should be run with `--privileged` and `--network=host`:
 
 ```
-docker run -it --privileged --network=host shooteu/ros2-built-all
+docker run -it --privileged --network=host shooteu/complete-agv-setup
 ```
 
 Inside the docker container, source `ros2_ws/install/setup.sh`.
@@ -17,65 +17,59 @@ Unless otherwise specified, these commands must be run from inside a ros2 docker
 ## IMU
 
 ```
-ros2 run imu_ros2 imu_ros2_node --ros-args -p iio_context_string:="local:"
+ros2 launch ardagv just_imu.launch.py
 ```
 
-If running from a non `--privileged` container (more specifically, if `/sys/bus/iio` is not available to the docker container), replace "local:" with "ip:localhost" and make sure the `iiod` service runs outside the container.
+If running from a non `--privileged` container (more specifically, if `/sys/bus/iio` is not available to the docker container), replace "local:" with "ip:localhost" inside `ardagv/launch/just_imu.launch.py` and make sure the `iiod` service runs outside the container. systemd unit file coming soon :)
+
+Publishes to `/imu`.
+
+## ToF
+
+```
+ros2 launch ardagv just_tof.launch.py
+```
+
+Make sure `~/Workspace/media_config_16D_16AB_8C.sh` is run beforehand outside the container. systemd unit file coming soon :)
+
+Publishes to `/cam1/depth_image` (pixel value = millimeters from camera), `/cam1/ab_image` (pixel value = IR image intensity).
 
 ## Motor control
 
-Uses ros2_control framework. Currently tested with a [forward velocity controller](https://control.ros.org/master/doc/ros2_controllers/forward_command_controller/doc/userdoc.html), and a [differential drive controller](https://control.ros.org/master/doc/ros2_controllers/diff_drive_controller/doc/userdoc.html).
-
-### ros2_control differential drive
-
-Differential drive inverse kinematics.
+Uses ros2_control framework. Currently tested with a [differential drive controller](https://control.ros.org/master/doc/ros2_controllers/diff_drive_controller/doc/userdoc.html). May also run with [forward velocity controller](https://control.ros.org/master/doc/ros2_controllers/forward_command_controller/doc/userdoc.html) by setting the `controller:=forward_velocity_controller` launch configuration.
 
 ```
-ros2 launch ardagvmotor diffdrive.launch.py
+ros2 launch ardagv just_motors.launch.py
 ```
 
-CAREFUL, running this should make your robot move:
-```
-ros2 topic pub /diff_drive_controller/cmd_vel geometry_msgs/msg/TwistStamped '{"header":{"stamp":{"sec":0,"nanosec":0},"frame_id":"base_link"},"twist":{
-        "linear":{"x":1.0,"y":0.0,"z":0.0},
-        "angular":{"x":0.0,"y":0.0,"z":0.0}
-}}'
-```
+Make sure the CAN interface is up and running.
 
-### ros2_control forward velocity control
+Known issues:
+- ros2_canopen logic introduces a huge delay from getting a command to it going out on the CAN bus. Seems to get better with lower loop frequencies. Currently investigating, top priority.
+- ros2_canopen fails to reliably initialize both motors (various timeout-related errors with CanController timers). Run it a couple of times until both motors oppose resistance to turning. Might be hand-in-hand with the previous bug. Top priority.
 
-No inverse kinematics, just set the velocity and go. Values of -4000 ... 4000 roughly correspond to -180 ... 180 RPM. Values outside of this interval are invalid.
-
-```
-ros2 launch ardagvmotor forward_velocity_control.launch.py
-```
-
-CAREFUL, running this should make your robot move:
-```
-ros2 topic pub /forward_velocity_controller/commands std_msgs/msg/Float64MultiArray '{data: [1000, 1000]}'
-```
-
+Publishes to `/ardagvmotor_robot_description`, and many others. Gets commands via `/diff_drive_controller/cmd_vel` or `/forward_velocity_controller/command` depending on which contrller was selected (diff drive default).
 
 ### Direct access to the CANopen drives
 
 If you want to bypass ros2_control, you may start the "raw" CiA 402 nodes using:
 
 ```
-ros2 launch canopen_core canopen.launch.py bus_config:=/home/runner/ros2_ws/install/ardagvmotor/share/ardagvmotor/config/bus.yml master_config:=/home/runner/ros2_ws/install/ardagvmotor/share/ardagvmotor/config/master.dcf can_interface_name:=can0 node_id:=1
+ros2 launch canopen_core canopen.launch.py bus_config:=/home/runner/ros2_ws/install/ardagv_motors/share/ardagvmotor/config/bus.yml master_config:=/home/runner/ros2_ws/install/ardagv_motors/share/ardagvmotor/config/master.dcf can_interface_name:=can0 node_id:=1
 ```
 
-Initialize the motor:  
+Initialize the motor (next few commands apply for right and left in the same way):
 ```
-ros2 service call motor_right/init std_srvs/Trigger '{}'
-ros2 service call motor_right/velocity_mode std_srvs/Trigger '{}'
+ros2 service call drive_right/init std_srvs/Trigger '{}'
+ros2 service call drive_right/velocity_mode std_srvs/Trigger '{}'
 ```
 
 Control motor with a speed between -4000 and 4000 (corresponding to an approx 180 RPM maximum in either direction):
 ```
-ros2 service call motor_right/target canopen_interfaces/srv/COTargetDouble '{"target": 500}'
+ros2 service call drive_right/target canopen_interfaces/srv/COTargetDouble '{"target": 500}'
 ```
 
-### Dislike ROS?
+### Alternative motor control without ROS
 
 Here's a basic python example to get you started with spinning the motors without *any* ROS2 usage, just using the `python-canopen` package. Can be run outside of a docker container, if you so wish:
 
@@ -113,6 +107,19 @@ time.sleep(1)
 # Power off the motors
 node.state = 'SWITCH ON DISABLED'
 ```
+
+## CRSF remote control
+
+```
+ros2 launch ardagv just_crsf.launch.py
+```
+
+Acts like a multiplexer between RC joystick and `/cmd_vel_auto` topic (navigation stack should write to this).
+On RC controller:
+- SA = killswitch
+- SD = mux select: up = manual, robot controller by right RC stick. down = auto, robot controlled by `/cmd_vel_auto` topic.
+
+Run this AFTER the motor control nodes are fully initialized, or risk screwingup ros2_canopen's timing even more. Expects ExpressLRS UART on UART3 (/dev/ttymxc3), 420000baud.
 
 # Portenta linux bringup
 
