@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 <xacro:macro name="ardagv_model" params="name">
-	<link name="${name}_base_link"></link> <!-- ground-level, below centerpoint between wheels -->
+	<link name="base_link"></link> 
 
-	<link name="${name}_chasis">
+	<link name="chasis">
 		<visual>
 			<origin xyz="0 0 0.08" rpy="0 0 0" />
 			<geometry>
@@ -14,12 +14,12 @@
 			<color rgba="0.5 0.5 0.5 1" />
 		</material>
 	</link>
-	<joint name="${name}_base_to_chasis" type="fixed">
-		<parent link="${name}_base_link" />
-		<child link="${name}_chasis" />
+	<joint name="base_to_chasis" type="fixed">
+		<parent link="base_link" />
+		<child link="chasis" />
 	</joint>
 
-	<link name="${name}_wheel_left">
+	<link name="wheel_left">
 		<visual>
 			<geometry>
 				<cylinder radius="0.05" length="0.025" />
@@ -29,9 +29,9 @@
 			<color rgba="0.2 0.2 0.2 1" />
 		</material>
 	</link>
-	<joint name="${name}_motor_left" type="continuous">
-		<parent link="${name}_base_link" />
-		<child link="${name}_wheel_left" />
+	<joint name="motor_left" type="continuous">
+		<parent link="base_link" />
+		<child link="wheel_left" />
 		<origin xyz="0 0.01225 0.05" rpy="1.570796326794897 0 0" />
 		<command_interface name="velocity"> <!-- RPM limits: -->
 			<param name="min">-18</param>
@@ -39,7 +39,7 @@
 		</command_interface>
 	</joint>
 
-	<link name="${name}_wheel_right">
+	<link name="wheel_right">
 		<visual>
 			<geometry>
 				<cylinder radius="0.05" length="0.025" />
@@ -49,9 +49,9 @@
 			<color rgba="0.2 0.2 0.2 1" />
 		</material>
 	</link>
-	<joint name="${name}_motor_right" type="continuous">
-		<parent link="${name}_base_link" />
-		<child link="${name}_wheel_right" />
+	<joint name="motor_right" type="continuous">
+		<parent link="base_link" />
+		<child link="wheel_right" />
 		<origin xyz="0 -0.01225 0.05" rpy="-1.570796326794897 0 0" />
 		<command_interface name="velocity"> <!-- RPM limits: -->
 			<param name="min">-18</param>
@@ -59,8 +59,8 @@
 		</command_interface>
 	</joint>
 
-	<sensor name="${name}_tof">
-		<parent link="${name}_base_link" />
+	<sensor name="tof">
+		<parent link="base_link" />
 		<origin xyz="0.3 0 0.05" rpy="0 0 0" /> <!-- TODO: orientation -->
 		<camera>
 			<image width="512" height="512" hfov="2" format="mono16" near="0.4" far="5" /> <!-- TODO: change FOV, radians -->
@@ -68,8 +68,8 @@
 		</camera>
 	</sensor>
 
-	<sensor name="${name}_imu">
-		<parent link="${name}_base_link" />
+	<sensor name="imu">
+		<parent link="base_link" />
 		<origin xyz="0.133 -0.01 0.05" rpy="0 0 0" /> <!-- TODO: orientation -->
 	</sensor>
 

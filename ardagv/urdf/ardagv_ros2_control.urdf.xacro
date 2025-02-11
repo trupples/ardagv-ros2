@@ -9,15 +9,15 @@
     <param name="can_interface_name">${can_iface}</param>
     <param name="master_bin"></param>
   </hardware>
-  <joint name="${name}_motor_left"> <!-- must correspond to joint defined in ardagv_model.urdf -->
+  <joint name="motor_left"> <!-- must correspond to joint defined in ardagv_model.urdf -->
     <command_interface name="velocity"/>
-    <param name="device_name">${name}_motor_left</param> <!-- must correspond to node name which controls this joint -->
+    <param name="device_name">drive_left</param> <!-- must correspond to node name which controls this joint -->
     <state_interface name="position"/>
     <state_interface name="velocity"/>
   </joint>
-  <joint name="${name}_motor_right">
+  <joint name="motor_right">
     <command_interface name="velocity"/>
-    <param name="device_name">${name}_motor_right</param>
+    <param name="device_name">drive_right</param>
     <state_interface name="position"/>
     <state_interface name="velocity"/>
   </joint>

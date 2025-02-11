@@ -43,7 +43,7 @@ def generate_launch_description():
         output="both",
         remappings=[
             ("controller_manager:__node", [name, TextSubstitution(text="_controller_manager")]), # Rename from /controller_manager to /ardagv_controller_manager
-            ("~/robot_description", "/robot_description"),
+            ("~/robot_description", ["/", name, "_robot_description"]),
         ],
         # use_global_arguments = False # Important, otherwise all children of controller_manager will also get the same __node:= remap and we will have nonsensical duplicate nodes
     )
@@ -55,6 +55,9 @@ def generate_launch_description():
         parameters=[
             {"robot_description": ParameterValue(robot_description, value_type=str)}
         ],
+        remappings=[
+            ("/robot_description", ["/", name, "_robot_description"])
+        ]
     )
 
     joint_state_broadcaster_spawner = Node(

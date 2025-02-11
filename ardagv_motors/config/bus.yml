@@ -6,12 +6,12 @@ master:
   driver: "ros2_canopen::MasterDriver"
   package: "canopen_master_driver"
   baudrate: 500000
-  sync_period: 10000 # us
+  sync_period: 20000 # us
   start: true
   start_nodes: true
   start_all_nodes: true
-  boot_time: 1000
-  boot_timeout: 1000
+  boot_time: 2000
+  boot_timeout: 2000
 
 defaults:
   product_code: 0
@@ -70,17 +70,17 @@ defaults:
       enabled: true
       cob_id: "auto"
       mapping:
-        # XXX - {index: 0x6040, sub_index: 0} # controlword
+        - {index: 0x6040, sub_index: 0} # controlword
         - {index: 0x60FF, sub_index: 0} # target velocity
 nodes:
-  ardagv_motor_left:
+  drive_left:
     node_id: 0x16
     scale_pos_to_dev: -521519.0
     scale_vel_to_dev: -221207.0
     scale_pos_from_dev: -1.917475982666016e-06
     scale_vel_from_dev: -4.712388975e-06
 
-  ardagv_motor_right:
+  drive_right:
     node_id: 0x14
     scale_pos_to_dev: 521519.0
     scale_vel_to_dev: 221207.0

@@ -1,6 +1,6 @@
-controller_manager:
+ardagv_controller_manager:
   ros__parameters:
-    update_rate: 100  # Hz
+    update_rate: 50  # Hz
 
     joint_state_broadcaster:
       type: joint_state_broadcaster/JointStateBroadcaster
@@ -15,14 +15,14 @@ controller_manager:
 forward_velocity_controller:
   ros__parameters:
     joints:
-      - ardagv_motor_left
-      - ardagv_motor_right
+      - motor_left
+      - motor_right
     interface_name: velocity
 
 diff_drive_controller:
   ros__parameters:
-    left_wheel_names: ["ardagv_motor_left"]
-    right_wheel_names: ["ardagv_motor_right"]
+    left_wheel_names: ["motor_left"]
+    right_wheel_names: ["motor_right"]
     interface_name: velocity
 
     # Update with your robot's measurements

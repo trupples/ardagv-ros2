@@ -19,10 +19,10 @@ class CRSFNode(Node):
         self.auto_cmd_subscription = self.create_subscription(TwistStamped, 'cmd_vel_auto', self.auto_cmd_callback, 5) # Automatic control velocity
 
         # Service client for reading supply voltage
-        self.cli = self.create_client(CORead, '/ardagv_motor_left/sdo_read')
+        self.cli = self.create_client(CORead, '/drive_left/sdo_read')
 
         # Service clients to stop / start the motors
-        motors = ['/ardagv_motor_left', '/ardagv_motor_right']
+        motors = ['/drive_left', '/drive_right']
         self.stop_services = [
             self.create_client(Trigger, motor + "/halt") for motor in motors
         ]
