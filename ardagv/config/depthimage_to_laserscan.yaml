@@ -1,0 +1,8 @@
+depthimage_to_laserscan:
+  # https://github.com/ros-perception/depthimage_to_laserscan/tree/ros2
+  ros__parameters:
+    scan_time: 0.033
+    range_min: 0.45
+    range_max: 10.0
+    scan_height: 32
+    output_frame: "camera_depth_frame"
