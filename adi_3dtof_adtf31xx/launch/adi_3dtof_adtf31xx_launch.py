@@ -194,7 +194,10 @@ def generate_launch_description():
                                                   "--pitch", f"{var_cam_optical_to_base_pitch}",
                                                   "--yaw", f"{var_cam_optical_to_base_yaw}",
                                                   "--frame-id", f"{var_cam1_base_frame}",
-                                                  "--child-frame-id", f"{var_cam1_child_frame}"]
+                                                  "--child-frame-id", f"{var_cam1_child_frame}"],
+        remappings=[
+            ('scan', "/scan_experimental")
+        ]
     )
 
     # map_to_cam1_base TF description
