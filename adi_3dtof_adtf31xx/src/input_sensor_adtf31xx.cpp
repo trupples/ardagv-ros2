@@ -41,7 +41,8 @@ void InputSensorADTF31XX::openSensor(
    //std::string ip = "ip:" + input_sensor_ip;
    //system.getCameraList(cameras, ip);
    //} else {
-  system.getCameraList(cameras);
+  } else {
+    system.getCameraList(cameras);
   }
 
   if (cameras.empty()) {

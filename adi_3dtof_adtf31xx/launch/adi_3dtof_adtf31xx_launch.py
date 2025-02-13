@@ -73,23 +73,23 @@ def generate_launch_description():
     # args_pc2laser_queue_size = DeclareLaunchArgument(
     #     'queue_size', default_value="10")
     arg_min_height = DeclareLaunchArgument(
-        'min_height', default_value=0.0)
+        'min_height', default_value='0.0')
     arg_max_height = DeclareLaunchArgument(
-        'max_height', default_value=1.0)
+        'max_height', default_value='1.0')
     args_angle_min = DeclareLaunchArgument(
-        'angle_min', default_value=-1.57)  # -M_PI/2
+        'angle_min', default_value='-1.57')  # -M_PI/2
     args_angle_max = DeclareLaunchArgument(
-        'angle_max', default_value=1.57)  # M_PI/2
+        'angle_max', default_value='1.57')  # M_PI/2
     args_angle_increment = DeclareLaunchArgument(
-        'angle_increment', default_value=0.0087)  # M_PI/360.0
+        'angle_increment', default_value='0.0087')  # M_PI/360.0
     args_scan_time = DeclareLaunchArgument(
-        'scan_time', default_value=0.0333333)  # 1.0/30.0
+        'scan_time', default_value='0.0333333')  # 1.0/30.0
     args_range_min = DeclareLaunchArgument(
-        'range_min', default_value=0.45)
+        'range_min', default_value='0.45')
     args_range_max = DeclareLaunchArgument(
-        'range_max', default_value=4.0)
+        'range_max', default_value='4.0')
     args_inf_epsilon = DeclareLaunchArgument(
-        'inf_epsilon', default_value=1.0)
+        'inf_epsilon', default_value='1.0')
     # NOTE: associated with the inf_is_valid param from costamp_2d obstacle layer
     args_use_inf = DeclareLaunchArgument(
         'use_inf', default_value="True")
@@ -169,15 +169,15 @@ def generate_launch_description():
             'param_encoding_type' : LaunchConfiguration('arg_encoding_type'),
             'param_input_sensor_ip': LaunchConfiguration('arg_input_sensor_ip'),
             # Experimental: PointCloud to LaserScan conversion
-            'min_height': LaunchConfiguration('arg_min_height'),
-            'max_height': LaunchConfiguration('arg_max_height'),
-            'angle_min': LaunchConfiguration('args_angle_min'),
-            'angle_max': LaunchConfiguration('args_angle_max'),
-            'angle_increment': LaunchConfiguration('args_angle_increment'),
-            'scan_time': LaunchConfiguration('args_scan_time'),
-            'range_min': LaunchConfiguration('args_range_min'),
-            'range_max': LaunchConfiguration('args_range_max'),
-            'inf_epsilon': LaunchConfiguration('args_inf_epsilon'),
+            'min_height': LaunchConfiguration('min_height'),
+            'max_height': LaunchConfiguration('max_height'),
+            'angle_min': LaunchConfiguration('angle_min'),
+            'angle_max': LaunchConfiguration('angle_max'),
+            'angle_increment': LaunchConfiguration('angle_increment'),
+            'scan_time': LaunchConfiguration('scan_time'),
+            'range_min': LaunchConfiguration('range_min'),
+            'range_max': LaunchConfiguration('range_max'),
+            'inf_epsilon': LaunchConfiguration('inf_epsilon'),
         }],
         on_exit=launch.actions.Shutdown()
     )
@@ -198,7 +198,7 @@ def generate_launch_description():
         remappings=[
             ('scan', "/scan_experimental")
         ]
-    )
+    )di
 
     # map_to_cam1_base TF description
     map_to_cam1_base_tf_desc = Node(
@@ -233,6 +233,16 @@ def generate_launch_description():
 
     # Launch
     return LaunchDescription([
+        arg_min_height,
+        arg_max_height,
+        args_angle_min,
+        args_angle_max,
+        args_angle_increment,
+        args_scan_time,
+        args_range_min,
+        args_range_max,
+        args_inf_epsilon,
+        args_use_inf,
         arg_camera_height_from_ground_in_mtr_desc,
         arg_input_sensor_mode_desc,
         arg_in_file_name_desc,
@@ -251,14 +261,5 @@ def generate_launch_description():
         cam1_base_to_optical_tf_desc,
         map_to_cam1_base_tf_desc,
         # rviz_desc
-        arg_min_height,
-        arg_max_height,
-        args_angle_min,
-        args_angle_max,
-        args_angle_increment,
-        args_scan_time,
-        args_range_min,
-        args_range_max,
-        args_inf_epsilon,
-        args_use_inf,
+
     ])

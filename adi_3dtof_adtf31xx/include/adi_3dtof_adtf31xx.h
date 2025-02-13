@@ -5,7 +5,6 @@ and its licensors.
 ******************************************************************************/
 #ifndef ADI_3DTOF_ADTF31XX__H
 #define ADI_3DTOF_ADTF31XX__H
-// #include "/home/analog/ros2_humble/install/compressed_depth_image_transport/include/compressed_depth_image_transport/compression_common.h"
 
 #include <compressed_depth_image_transport/compression_common.h>
 #include <cv_bridge/cv_bridge.h>
