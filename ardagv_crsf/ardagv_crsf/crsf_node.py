@@ -135,6 +135,7 @@ class CRSFNode(Node):
             max_rot = 1 # rad/s
 
             twist = TwistStamped()
+            twist.header.frame_id = 'base_link'
             twist.twist.linear.x = ry / 100 * max_vel
             twist.twist.angular.z = -rx / 100 * max_rot 
             self.get_logger().info(f"MANUAL:\t{twist.twist.linear.x:.01f} m/s\t{twist.twist.angular.z:.01f} rad/s")
@@ -143,7 +144,7 @@ class CRSFNode(Node):
 
     def auto_cmd_callback(self, msg):
         if self.state == 'run_auto':
-            self.get_loger().info(f"AUTO: {msg.twist.linear.x:.01f} m/s\t{msg.twist.angular.z:.01f} rad/s")
+            self.get_logger().info(f"AUTO: {msg.twist.linear.x:.01f} m/s\t{msg.twist.angular.z:.01f} rad/s")
             self.cmd_publisher.publish(msg)
             self.do_kinematics(msg.twist.linear.x, msg.twist.angular.z)
 
