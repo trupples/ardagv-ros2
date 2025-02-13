@@ -29,6 +29,7 @@ class CRSFNode(Node):
         self.start_services = [
             self.create_client(Trigger, motor + "/" + action) for motor in motors for action in ["init", "velocity_mode"]
         ]
+        self.service_call_queue = []
 
         # Wait for services to become available
         self.get_logger().info(f"Waiting for motor nodes {motors} to become available:")
@@ -53,6 +54,28 @@ class CRSFNode(Node):
 
         self.state = 'init' # init -[kill switch on]-> kill -[kill switch off]-> run -[kill switch on]-> kill
 
+    def service_queue_process(self, result):
+        if not self.service_call_queue:
+            return
+
+        self.get_logger().info(f'{self.service_call_queue=}')
+        next_req, self.service_call_queue = self.service_call_queue[0], self.service_call_queue[1:]
+        self.get_logger().info(f'{next_req=}')
+        cli, req = next_req
+        self.get_logger().info(f'Calling service {cli.srv_name}')
+
+        f = cli.call_async(req)
+        f.add_done_callback(lambda res: self.service_queue_process(res))
+
+    def queue_up_service_calls(self, cli_req_pairs):
+        self.get_logger().info(f'Queueing service call sequence {[c.srv_name for c,r in cli_req_pairs]}')
+        if not self.service_call_queue:
+            self.service_call_queue.extend(cli_req_pairs)
+            self.service_queue_process(None)
+        else:
+            self.service_call_queue.extend(cli_req_pairs)
+
+
     def battery_timer_callback(self):
         # Called every second to request the batery voltage via SDO
         req = CORead.Request()
@@ -70,10 +93,12 @@ class CRSFNode(Node):
             self.get_logger().error("Couldn't get battery voltage")
             return
 
-        self.get_logger().debug('Got battery')
 
         v = res.data # Happily enough, the TMC reports in 100mV units, and CRSF expects 100mV units
         rem = ((v*0.1) / 3 - 3) / (4.2 - 3) * 100 # Rough percentage if 3V = 0% and 4.2V = 100%
+        if rem < 0:
+            rem = 0
+        self.get_logger().info(f'battery {v*0.1:.1f} V')
 
         battery_frame = crsf_build_frame(PacketsTypes.BATTERY_SENSOR, {"voltage": v, "current": 1, "capacity": 100, "remaining": int(rem)})
 
@@ -153,20 +178,19 @@ class CRSFNode(Node):
         self.get_logger().info("MODE: KILLSWITCH")
 
         twist = TwistStamped() # Defaults to all zeros
+        twist.header.frame_id = 'base_link'
         self.cmd_publisher.publish(twist)
 
         self.do_kinematics(0, 0)
 
-        #for cli in self.stop_services:
-        #    cli.call_async(Trigger.Request()) # Stop asynchronously to ensure fast response
+        for cli in self.stop_services:
+            cli.call_async(Trigger.Request()) # Stop asynchronously to ensure fast response
 
     def enter_run(self):
         self.state = 'run' # Will be shortly changed to run_manual or run_auto
         self.get_logger().info("MODE: RUNNING")
 
-        #for cli in self.start_services:
-        #    self.get_logger().info(f"Calling {cli.srv_name}")
-        #    cli.call_async(Trigger.Request()) # Start synchhronously to make sure order is ok
+        self.queue_up_service_calls([(cli, Trigger.Request()) for cli in self.start_services])
 
     def do_kinematics(self, linear, angular):
         # Substitute for diff drive node because it acts up
