@@ -859,8 +859,6 @@ private:
       }
     }
 
-    // =========================================================================
-
     // Build laser scan
     auto laser_scan_msg = std::make_shared<sensor_msgs::msg::LaserScan>();
 
@@ -891,7 +889,12 @@ private:
     }
 
     // Iterate through pointcloud
-    for (sensor_msgs::PointCloud2ConstIterator<float> iter_x(*pointcloud_msg, "x"), iter_y(*pointcloud_msg, "y"), iter_z(*pointcloud_msg, "z");
+    // TODO: fix coordinate system and replace below iterators with expected x, y, z
+    // Temporary workaround:
+    //    y -> x
+    //    x -> z
+    //    z -> y
+    for (sensor_msgs::PointCloud2ConstIterator<float> iter_x(*pointcloud_msg, "z"), iter_y(*pointcloud_msg, "x"), iter_z(*pointcloud_msg, "y");
          iter_x != iter_x.end();
          ++iter_x, ++iter_y, ++iter_z)
     {
