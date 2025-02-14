@@ -253,6 +253,6 @@ def generate_launch_description():
         arg_encoding_type_desc,
         adi_3dtof_adtf31xx_node_desc,
         cam1_base_to_optical_tf_desc,
-        map_to_cam1_base_tf_desc,
+        # map_to_cam1_base_tf_desc,
         # rviz_desc
     ])
