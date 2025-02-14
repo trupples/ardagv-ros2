@@ -30,27 +30,27 @@ def generate_launch_description():
     # Relative path to the launch file which gets executed. Here, launch file from install folder is considered
     arg_in_file_name_desc = DeclareLaunchArgument('arg_in_file_name', default_value= package_dir + "../adi_3dtof_input_video_files/adi_3dtof_height_170mm_yaw_135degrees_cam1.bin")
 
-    # Input Sensor IP Address : Applicable only if inpiut sensor mode is 3    
+    # Input Sensor IP Address : Applicable only if inpiut sensor mode is 3
     arg_input_sensor_ip_desc = DeclareLaunchArgument(
         'arg_input_sensor_ip', default_value=input("Input board ip e.g.'10.76.84.213'"))
-    
+
     # Enable RVL compression for depth and ab images
     arg_enable_depth_ab_compression_desc = DeclareLaunchArgument(
         'arg_enable_depth_ab_compression', default_value="False")
-    
-    # Enable Depth image publishing 
+
+    # Enable Depth image publishing
     arg_enable_depth_publish_desc = DeclareLaunchArgument(
         'arg_enable_depth_publish', default_value="True")
-    
-    # Enable AB image publishing 
+
+    # Enable AB image publishing
     arg_enable_ab_publish_desc = DeclareLaunchArgument(
         'arg_enable_ab_publish', default_value="True")
-    
-    # Enable Confidence image publishing 
+
+    # Enable Confidence image publishing
     arg_enable_conf_publish_desc = DeclareLaunchArgument(
         'arg_enable_conf_publish', default_value="True")
-    
-    # Enable Point Cloud image publishing 
+
+    # Enable Point Cloud image publishing
     arg_enable_point_cloud_publish_desc = DeclareLaunchArgument(
         'arg_enable_point_cloud_publish', default_value="True")
 
@@ -62,12 +62,34 @@ def generate_launch_description():
     arg_confidence_threshold_desc = DeclareLaunchArgument(
         'arg_confidence_threshold', default_value="10")
 
-    # Configuration file name of ToF SDK 
+    # Configuration file name of ToF SDK
     # config_adsd3500_adsd3100.json - For ADSd3100(MP sensor)
     # config_adsd3500_adsd3030.json - For ADSd3030(VGA sensor)
     config_json_file_name = "config_adsd3500_adsd3100.json"
     arg_config_file_name_of_tof_sdk_desc = DeclareLaunchArgument(
         'arg_config_file_name_of_tof_sdk', default_value= package_dir + "config/" + config_json_file_name)
+
+    # LaserScan Arguments documentation: https://github.com/ros-perception/pointcloud_to_laserscan/tree/humble#parameters
+    arg_min_height = DeclareLaunchArgument(
+        'min_height', default_value='0.0')
+    arg_max_height = DeclareLaunchArgument(
+        'max_height', default_value='1.0')
+    args_angle_min = DeclareLaunchArgument(
+        'angle_min', default_value='-0.6544984694978736')
+    args_angle_max = DeclareLaunchArgument(
+        'angle_max', default_value='0.6544984694978736')
+    args_angle_increment = DeclareLaunchArgument(
+        'angle_increment', default_value='0.0087')
+    args_scan_time = DeclareLaunchArgument(
+        'scan_time', default_value='0.0333333')
+    args_range_min = DeclareLaunchArgument(
+        'range_min', default_value='0.3')
+    args_range_max = DeclareLaunchArgument(
+        'range_max', default_value='10.0')
+    args_inf_epsilon = DeclareLaunchArgument(
+        'inf_epsilon', default_value='1.0')
+    args_use_inf = DeclareLaunchArgument(
+        'use_inf', default_value="True")
 
     # Frame Type
     #MP(1024x01024) sensor:
@@ -83,7 +105,7 @@ def generate_launch_description():
     #    "lr-native" - 1
     #    "lr-qnative" - 3
     #    "sr-mixed" - 5
-    #    "lr-mixed" - 6    
+    #    "lr-mixed" - 6
     arg_camera_mode_desc = DeclareLaunchArgument(
         'arg_camera_mode', default_value="3")
 
@@ -92,7 +114,7 @@ def generate_launch_description():
     #   "16UC1" - 16 bit unsigned integer
     arg_encoding_type_desc = DeclareLaunchArgument(
         'arg_encoding_type', default_value="mono16")
-        
+
     # Parameters for TF
     var_ns_prefix_cam1 = "cam1"
     var_cam1_base_frame_optical = f"{var_ns_prefix_cam1}_adtf31xx_optical"
@@ -135,14 +157,24 @@ def generate_launch_description():
             'param_config_file_name_of_tof_sdk': LaunchConfiguration('arg_config_file_name_of_tof_sdk'),
             'param_camera_mode': LaunchConfiguration('arg_camera_mode'),
             'param_enable_depth_ab_compression': LaunchConfiguration('arg_enable_depth_ab_compression'),
-            'param_enable_depth_publish': LaunchConfiguration('arg_enable_depth_publish'),            
+            'param_enable_depth_publish': LaunchConfiguration('arg_enable_depth_publish'),
             'param_enable_ab_publish': LaunchConfiguration('arg_enable_ab_publish'),
             'param_enable_conf_publish': LaunchConfiguration('arg_enable_conf_publish'),
             'param_enable_point_cloud_publish': LaunchConfiguration('arg_enable_point_cloud_publish'),
             'param_ab_threshold': LaunchConfiguration('arg_ab_threshold'),
             'param_confidence_threshold': LaunchConfiguration('arg_confidence_threshold'),
             'param_encoding_type' : LaunchConfiguration('arg_encoding_type'),
-            'param_input_sensor_ip' : LaunchConfiguration('arg_input_sensor_ip')
+            'param_input_sensor_ip': LaunchConfiguration('arg_input_sensor_ip'),
+            # Experimental: PointCloud to LaserScan conversion
+            'min_height': LaunchConfiguration('min_height'),
+            'max_height': LaunchConfiguration('max_height'),
+            'angle_min': LaunchConfiguration('angle_min'),
+            'angle_max': LaunchConfiguration('angle_max'),
+            'angle_increment': LaunchConfiguration('angle_increment'),
+            'scan_time': LaunchConfiguration('scan_time'),
+            'range_min': LaunchConfiguration('range_min'),
+            'range_max': LaunchConfiguration('range_max'),
+            'inf_epsilon': LaunchConfiguration('inf_epsilon'),
         }],
         on_exit=launch.actions.Shutdown()
     )
@@ -159,7 +191,7 @@ def generate_launch_description():
                                                   "--pitch", f"{var_cam_optical_to_base_pitch}",
                                                   "--yaw", f"{var_cam_optical_to_base_yaw}",
                                                   "--frame-id", f"{var_cam1_base_frame}",
-                                                  "--child-frame-id", f"{var_cam1_child_frame}"]
+                                                  "--child-frame-id", f"{var_cam1_child_frame}"],
     )
 
     # map_to_cam1_base TF description
@@ -195,6 +227,16 @@ def generate_launch_description():
 
     # Launch
     return LaunchDescription([
+        arg_min_height,
+        arg_max_height,
+        args_angle_min,
+        args_angle_max,
+        args_angle_increment,
+        args_scan_time,
+        args_range_min,
+        args_range_max,
+        args_inf_epsilon,
+        args_use_inf,
         arg_camera_height_from_ground_in_mtr_desc,
         arg_input_sensor_mode_desc,
         arg_in_file_name_desc,
