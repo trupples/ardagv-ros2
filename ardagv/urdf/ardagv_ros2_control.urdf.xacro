@@ -19,14 +19,14 @@
   <joint name="motor_left"> <!-- must correspond to joint defined in ardagv_model.urdf -->
     <command_interface name="velocity"/>
     <param name="device_name">drive_left</param> <!-- must correspond to node name which controls this joint -->
-    <param name="node_id">20</param>
+    <param name="node_id">22</param>
     <state_interface name="position"/>
     <state_interface name="velocity"/>
   </joint>
   <joint name="motor_right">
     <command_interface name="velocity"/>
     <param name="device_name">drive_right</param>
-    <param name="node_id">22</param>
+    <param name="node_id">20</param>
     <state_interface name="position"/>
     <state_interface name="velocity"/>
   </joint>
