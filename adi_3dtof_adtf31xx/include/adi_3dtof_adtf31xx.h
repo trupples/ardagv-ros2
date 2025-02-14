@@ -5,9 +5,8 @@ and its licensors.
 ******************************************************************************/
 #ifndef ADI_3DTOF_ADTF31XX__H
 #define ADI_3DTOF_ADTF31XX__H
-#include "/home/analog/ros2_humble/install/compressed_depth_image_transport/include/compressed_depth_image_transport/compression_common.h"
 
-//#include <compressed_depth_image_transport/compression_common.h>
+#include <compressed_depth_image_transport/compression_common.h>
 #include <cv_bridge/cv_bridge.h>
 #include <image_geometry/pinhole_camera_model.h>
 #include <sensor_msgs/msg/image.h>
@@ -20,6 +19,7 @@ and its licensors.
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/distortion_models.hpp>
 #include <sensor_msgs/point_cloud2_iterator.hpp>
+#include <sensor_msgs/msg/laser_scan.hpp>
 #include <std_msgs/msg/byte_multi_array.hpp>
 #include <string>
 
@@ -192,6 +192,39 @@ public:
     this->declare_parameter<int>(
       "param_radial_threshold_max", 10000, radial_threshold_max_descriptor);
 
+    // PointCloud to LaserScan transformation parameters
+    this->declare_parameter("min_height", std::numeric_limits<double>::min());
+    this->declare_parameter("max_height", std::numeric_limits<double>::max());
+    this->declare_parameter("angle_min", -M_PI);
+    this->declare_parameter("angle_max", M_PI);
+    this->declare_parameter("angle_increment", M_PI / 180.0);
+    this->declare_parameter("scan_time", 1.0 / 30.0);
+    this->declare_parameter("range_min", 0.0);
+    this->declare_parameter("range_max", std::numeric_limits<double>::max());
+    this->declare_parameter("inf_epsilon", 1.0);
+    this->declare_parameter("use_inf", true);
+
+    pc2laser_params_.min_height =
+        this->get_parameter("min_height").get_parameter_value().get<double>();
+    pc2laser_params_.max_height =
+        this->get_parameter("max_height").get_parameter_value().get<double>();
+    pc2laser_params_.angle_min =
+        this->get_parameter("angle_min").get_parameter_value().get<double>();
+    pc2laser_params_.angle_max =
+        this->get_parameter("angle_max").get_parameter_value().get<double>();
+    pc2laser_params_.angle_increment =
+        this->get_parameter("angle_increment").get_parameter_value().get<double>();
+    pc2laser_params_.scan_time =
+        this->get_parameter("scan_time").get_parameter_value().get<double>();
+    pc2laser_params_.range_min =
+        this->get_parameter("range_min").get_parameter_value().get<double>();
+    pc2laser_params_.range_max =
+        this->get_parameter("range_max").get_parameter_value().get<double>();
+    pc2laser_params_.inf_epsilon =
+        this->get_parameter("inf_epsilon").get_parameter_value().get<double>();
+    pc2laser_params_.use_inf =
+        this->get_parameter("use_inf").get_parameter_value().get<bool>();
+
     enable_jblf_filter_ =
       this->get_parameter("param_enable_jblf_filter").get_parameter_value().get<bool>();
 
@@ -309,6 +342,9 @@ public:
     xyz_image_publisher_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(
       "point_cloud", rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(qos_profile), qos_profile));
 
+    laser_scan_publisher_ = this->create_publisher<sensor_msgs::msg::LaserScan>(
+        "scan", rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(qos_profile), qos_profile));
+
     // Camera Infos
     depth_info_publisher_ = this->create_publisher<sensor_msgs::msg::CameraInfo>(
       "camera_info", rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(qos_profile), qos_profile));
@@ -380,6 +416,7 @@ private:
   rclcpp::Publisher<sensor_msgs::msg::CompressedImage>::SharedPtr compressed_ab_image_publisher_;
   rclcpp::Publisher<sensor_msgs::msg::CompressedImage>::SharedPtr compressed_conf_image_publisher_;
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr xyz_image_publisher_;
+  rclcpp::Publisher<sensor_msgs::msg::LaserScan>::SharedPtr laser_scan_publisher_;
   rclcpp::Publisher<sensor_msgs::msg::CameraInfo>::SharedPtr depth_info_publisher_;
   CameraIntrinsics depth_intrinsics_;
   CameraExtrinsics depth_extrinsics_;
@@ -404,6 +441,23 @@ private:
   int jblf_filter_size_ = 7;
   int radial_threshold_min_ = 100;
   int radial_threshold_max_ = 10000;
+
+  // PointCloud to LaserScan transformation parameters
+  struct PointCloudToLaserScanParams
+  {
+    double min_height;
+    double max_height;
+    double angle_min;
+    double angle_max;
+    double angle_increment;
+    double scan_time;
+    double range_min;
+    double range_max;
+    double inf_epsilon;
+    bool use_inf;
+  };
+
+  PointCloudToLaserScanParams pc2laser_params_;
 
   /**
    * @brief    This is the scale factor to scale the input image.
@@ -722,7 +776,12 @@ private:
   /**
    * @brief This function publishes the point cloud
    *
-   * Note: Assumes that cam_info_msg_ is already populated
+   * @note: This function does the same base functionality as publishPointCloud.
+   *  Additionally, it uses parameters that define the transform from PointCloud
+   *  to LaserScan. After the transform is done, it publishes this data to the
+   *  /scan topic, which can be used for tasks such as SLAM.
+   *
+   * @param xyz_frame Pointer to the XYZ frame containing the point cloud data.
    */
   void publishPointCloud(short * xyz_frame)
   {
@@ -761,8 +820,138 @@ private:
   }
 
   /**
+   * @brief This function publishes the laser scan conversion
+   *
+   * @note: First we compute the point cloud, then we convert it to laser scan.
+   */
+  void publishLaserScan(short *xyz_frame)
+  {
+    // Build point cloud
+    sensor_msgs::msg::PointCloud2::SharedPtr pointcloud_msg(new sensor_msgs::msg::PointCloud2);
+
+    pointcloud_msg->header.stamp = curr_frame_timestamp_;
+    pointcloud_msg->header.frame_id = camera_link_;
+    pointcloud_msg->width = image_width_;
+    pointcloud_msg->height = image_height_;
+    pointcloud_msg->is_dense = false;
+    pointcloud_msg->is_bigendian = false;
+
+    // XYZ data from sensor.
+    // This data is in 16 bpp format.
+    short *xyz_sensor_buf = xyz_frame;
+
+    sensor_msgs::PointCloud2Modifier pcd_modifier(*pointcloud_msg);
+    pcd_modifier.setPointCloud2FieldsByString(1, "xyz");
+
+    sensor_msgs::PointCloud2Iterator<float> iter_x(*pointcloud_msg, "x");
+    sensor_msgs::PointCloud2Iterator<float> iter_y(*pointcloud_msg, "y");
+    sensor_msgs::PointCloud2Iterator<float> iter_z(*pointcloud_msg, "z");
+    for (int i = 0; i < image_height_; i++)
+    {
+      for (int j = 0; j < image_width_; j++)
+      {
+        *iter_x = (float)(*xyz_sensor_buf++) / 1000.0f;
+        *iter_y = (float)(*xyz_sensor_buf++) / 1000.0f;
+        *iter_z = (float)(*xyz_sensor_buf++) / 1000.0f;
+        ++iter_x;
+        ++iter_y;
+        ++iter_z;
+      }
+    }
+
+    // =========================================================================
+
+    // Build laser scan
+    auto laser_scan_msg = std::make_shared<sensor_msgs::msg::LaserScan>();
+
+    laser_scan_msg->header.stamp = curr_frame_timestamp_;
+    laser_scan_msg->header.frame_id = camera_link_;
+
+    laser_scan_msg->angle_min = pc2laser_params_.angle_min;
+    laser_scan_msg->angle_max = pc2laser_params_.angle_max;
+    laser_scan_msg->angle_increment = pc2laser_params_.angle_increment;
+    laser_scan_msg->time_increment = 0.0;
+    laser_scan_msg->scan_time = pc2laser_params_.scan_time;
+    laser_scan_msg->range_min = pc2laser_params_.range_min;
+    laser_scan_msg->range_max = pc2laser_params_.range_max;
+
+    // determine amount of rays to create
+    uint32_t ranges_size = std::ceil(
+        (laser_scan_msg->angle_max - laser_scan_msg->angle_min) / laser_scan_msg->angle_increment);
+
+    // determine if laserscan rays with no obstacle data will evaluate to infinity or max_range
+    if (pc2laser_params_.use_inf)
+    {
+      laser_scan_msg->ranges.assign(ranges_size, std::numeric_limits<double>::infinity());
+    }
+    else
+    {
+      laser_scan_msg->ranges.assign(ranges_size,
+                                    laser_scan_msg->range_max + pc2laser_params_.inf_epsilon);
+    }
+
+    // Iterate through pointcloud
+    for (sensor_msgs::PointCloud2ConstIterator<float> iter_x(*pointcloud_msg, "x"), iter_y(*pointcloud_msg, "y"), iter_z(*pointcloud_msg, "z");
+         iter_x != iter_x.end();
+         ++iter_x, ++iter_y, ++iter_z)
+    {
+      if (std::isnan(*iter_x) || std::isnan(*iter_y) || std::isnan(*iter_z))
+      {
+        RCLCPP_DEBUG(this->get_logger(),
+                     "rejected for nan in point(%f, %f, %f)\n",
+                     *iter_x, *iter_y, *iter_z);
+        continue;
+      }
+
+      if (*iter_z > pc2laser_params_.max_height || *iter_z < pc2laser_params_.min_height)
+      {
+        RCLCPP_DEBUG(this->get_logger(),
+                     "rejected for height %f not in range (%f, %f)\n",
+                     *iter_z, pc2laser_params_.min_height, pc2laser_params_.max_height);
+        continue;
+      }
+
+      double range = hypot(*iter_x, *iter_y);
+      if (range < pc2laser_params_.range_min)
+      {
+        RCLCPP_DEBUG(this->get_logger(),
+                     "rejected for range %f below minimum value %f. Point: (%f, %f, %f)",
+                     range, pc2laser_params_.range_min, *iter_x, *iter_y, *iter_z);
+        continue;
+      }
+      if (range > pc2laser_params_.range_max)
+      {
+        RCLCPP_DEBUG(this->get_logger(),
+                     "rejected for range %f above maximum value %f. Point: (%f, %f, %f)",
+                     range, pc2laser_params_.range_max, *iter_x, *iter_y, *iter_z);
+        continue;
+      }
+
+      double angle = atan2(*iter_y, *iter_x);
+      if (angle < laser_scan_msg->angle_min || angle > laser_scan_msg->angle_max)
+      {
+        RCLCPP_DEBUG(this->get_logger(),
+                     "rejected for angle %f not in range (%f, %f)\n",
+                     angle, laser_scan_msg->angle_min, laser_scan_msg->angle_max);
+        continue;
+      }
+
+      // overwrite range at laserscan ray if new range is smaller
+      int index = (angle - laser_scan_msg->angle_min) / laser_scan_msg->angle_increment;
+      if (range < laser_scan_msg->ranges[index])
+      {
+        laser_scan_msg->ranges[index] = range;
+      }
+    }
+
+    // Publish to topics
+    xyz_image_publisher_->publish(*pointcloud_msg);
+    laser_scan_publisher_->publish(*laser_scan_msg);
+  }
+
+  /**
    * @brief This function publishes the images as Ros message.
-   * 
+   *
    * @param out_frame Pointer to the output frame containing the compressed depth frame and its size.
    */
   void publishImageAndCameraInfo(ADI3DToFADTF31xxOutputInfo * out_frame)
@@ -815,7 +1004,10 @@ private:
     if (enable_xyz_publish_) {
       PROFILE_FUNCTION_START(publish_PointCloud)
       // PublishPointCloud
-      publishPointCloud(out_frame->xyz_frame_);
+      // publishPointCloud(out_frame->xyz_frame_);
+
+      // Publish PointCloud and mapped Laser Scan
+      publishLaserScan(out_frame->xyz_frame_);
       PROFILE_FUNCTION_END(publish_PointCloud)
     }
   }
