@@ -37,11 +37,12 @@ void InputSensorADTF31XX::openSensor(
   aditof::System system;
   std::vector<std::shared_ptr<aditof::Camera>> cameras;
 
+  // Fix: this solves camera not found issue on portenta
   if (!input_sensor_ip.empty()) {
-   //std::string ip = "ip:" + input_sensor_ip;
-   //system.getCameraList(cameras, ip);
-   //} else {
-  system.getCameraList(cameras);
+  //  std::string ip = "ip:" + input_sensor_ip;
+  //  system.getCameraList(cameras, ip);
+   } else {
+    system.getCameraList(cameras);
   }
 
   if (cameras.empty()) {
