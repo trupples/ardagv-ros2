@@ -61,6 +61,35 @@
                 </command_interface>
         </joint>
 
+        <link name="cam1_adtf31xx">
+        </link>
+        <joint name="tof_position" type="fixed">
+                <parent link="base_link" />
+                <!--<child link="cam1_adtf31xx_optical" />
+                <origin xyz="0.3 0 0.05" rpy="1.5708 0 1.5708" />-->
+                <child link="cam1_adtf31xx" />
+                <origin xyz="0.3 0 0.05" rpy="0 0 0" />
+        </joint>
+
+        <link name="cam1_laser">
+        </link>
+        <joint name="laser_position" type="fixed">
+                <parent link="base_link" />
+                <child link="cam1_laser" />
+                <origin xyz="0.3 0 0.05" rpy="0 0 0" />
+        </joint>
+
+        <link name="imu">
+        </link>
+        <joint name="imu_position" type="fixed">
+                <parent link="base_link" />
+                <child link="imu" />
+                <origin xyz="0.133 -0.01 0.05" rpy="1.5708 0 0" />
+        </joint>
+
+
+
+
         <sensor name="tof">
                 <parent link="base_link" />
                 <origin xyz="0.3 0 0.05" rpy="0 0 0" /> <!-- TODO: orientation -->

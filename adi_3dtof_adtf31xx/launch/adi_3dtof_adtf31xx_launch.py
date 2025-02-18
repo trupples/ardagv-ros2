@@ -32,7 +32,7 @@ def generate_launch_description():
 
     # Input Sensor IP Address : Applicable only if inpiut sensor mode is 3
     arg_input_sensor_ip_desc = DeclareLaunchArgument(
-        'arg_input_sensor_ip', default_value=input("Input board ip e.g.'10.76.84.213'"))
+        'arg_input_sensor_ip', default_value="127.0.0.1")
 
     # Enable RVL compression for depth and ab images
     arg_enable_depth_ab_compression_desc = DeclareLaunchArgument(
@@ -253,6 +253,6 @@ def generate_launch_description():
         arg_encoding_type_desc,
         adi_3dtof_adtf31xx_node_desc,
         cam1_base_to_optical_tf_desc,
-        map_to_cam1_base_tf_desc,
+        # map_to_cam1_base_tf_desc,
         # rviz_desc
     ])
