@@ -8,6 +8,10 @@
   <license>TODO: License declaration</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
+ 
+  <!-- Sim components: -->
+  <depend>gazebo_ros_pkgs</depend>
+  <depend>gazebo_ros2_control</depend>
 
   <!-- Our components: -->
   <depend>ardagv_crsf</depend>

@@ -45,3 +45,5 @@ ekf_filter_node:
                       false, false, false,
                       false, false, false,
                       false, false, false]
+
+        imu0_remove_gravitational_acceleration: true
