@@ -31,3 +31,5 @@ diff_drive_controller:
 
     position_feedback: false # TODO(ioan): do we actually have usable position feedback?
 
+    enable_odom_tf: False
+

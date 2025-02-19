@@ -72,6 +72,13 @@ def generate_launch_description():
         arguments = [LaunchConfiguration("controller"), "--controller-manager", [TextSubstitution(text="/"), name, TextSubstitution(text="_controller_manager")]],
         output="both",
     )
+    robot_localization_node = Node(
+         package='robot_localization',
+         executable='ekf_node',
+         name='ekf_filter_node',
+         output='screen',
+         parameters=[os.path.join(get_package_share_directory("ardagv"), 'config/ekf.yaml'), {'use_sim_time': False}]
+    )
 
     return LaunchDescription([
         decl_name,
@@ -82,5 +89,6 @@ def generate_launch_description():
         robot_state_publisher,
         controller_spawner,
         joint_state_broadcaster_spawner,
+        robot_localization_node
     ])
 
