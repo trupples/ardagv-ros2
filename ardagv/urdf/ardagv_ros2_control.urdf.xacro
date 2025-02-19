@@ -12,9 +12,9 @@
             </hardware>-->
             <hardware>
                 <plugin>canopen_ros2_control/Cia402System</plugin>
-                <param name="bus_config">$(find ardagv)/config/bus.yml</param>
-                <param name="master_config">$(find ardagv)/config/master.dcf</param>
-                <param name="can_interface_name">can1</param>
+                <param name="bus_config">$(find ardagv_motors)/config/bus.yml</param>
+                <param name="master_config">$(find ardagv_motors)/config/master.dcf</param>
+		<param name="can_interface_name">$(arg can_iface)</param>
                 <param name="master_bin"></param>
             </hardware>
             <joint name="left_wheel_joint"> <!-- must correspond to joint defined in ardagv_model.urdf -->

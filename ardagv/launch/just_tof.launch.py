@@ -18,9 +18,9 @@ def generate_launch_description():
         launch_arguments={
             # LaserScan Arguments documentation: https://github.com/ros-perception/pointcloud_to_laserscan/tree/humble#parameters
             # [m] -> Minimal height scanning range
-            "min_height,": "0.05",
+            "min_height,": "-0.05",
             # [m] -> Maximal height scanning range
-            "max_height,": "0.4",
+            "max_height,": "0.05",
             # [rad] -> Minimal angle scanning range (-75 deg)
             "angle_min,": "-0.6544984694978736",
             # [rad] -> Maximal angle scanning range (75 deg)
@@ -32,15 +32,12 @@ def generate_launch_description():
             # [m] -> Restrict min detection range
             "range_min,": "0.2",
             # [m] -> Restrict max detection range
-            "range_max,": "10.0",
+            "range_max,": "5.0",
             #  If disabled, report infinite range (no obstacle) as range_max + 1. Otherwise report infinite range as +inf.
             "use_inf,": "True",
             # Determines the value added to max range when use_infs parameter is set to false.
             "inf_epsilon,": "1.0",
         }.items(),
-        remappings=[
-            # ('scan', "/scan_experimental")
-        ]
     )
 
     # Optional: Run the node with a namespace

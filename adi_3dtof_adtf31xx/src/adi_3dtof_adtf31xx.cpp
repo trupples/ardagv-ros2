@@ -58,7 +58,9 @@ bool ADI3DToFADTF31xx::readNextFrame()
     return false;
   }
 
-  curr_frame_timestamp_ = inframe->getFrameTimestamp();
+  // curr_frame_timestamp_ = inframe->getFrameTimestamp();
+  new_output_frame->frame_timestamp_ns_ = inframe->getFrameTimestamp().nanoseconds();
+  std::cerr << "(ioan) Got frame " << frame_number_ << " from SDK at timestamp " << new_output_frame->frame_timestamp_ns_ << "\n";
 
   if (
     (inframe->getDepthFrame() == nullptr) || (inframe->getABFrame() == nullptr) ||

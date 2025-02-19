@@ -5,7 +5,7 @@ from crsf_parser.payloads import PacketsTypes
 from crsf_parser.handling import crsf_build_frame
 from std_msgs.msg import String, Int16MultiArray, Float64MultiArray 
 from canopen_interfaces.srv import CORead # SDO read service
-from geometry_msgs.msg import TwistStamped
+from geometry_msgs.msg import TwistStamped, Twist
 from std_srvs.srv import Trigger
 from serial import Serial
 
@@ -13,10 +13,12 @@ class CRSFNode(Node):
     def __init__(self):
         super().__init__('crsf')
         self.cmd_publisher = self.create_publisher(TwistStamped, 'muxd_vel', 1) # Multiplexed velocity
+        self.cmdu_publisher = self.create_publisher(Twist, 'muxd_vel_unstamped', 1) # Multiplexed velocity
         self.forward_publisher = self.create_publisher(Float64MultiArray, 'muxd_fwd', 1) # Multiplexed forward kinematics
 
         self.channel_publisher = self.create_publisher(Int16MultiArray, 'channels', 1)
-        self.auto_cmd_subscription = self.create_subscription(TwistStamped, 'cmd_vel_auto', self.auto_cmd_callback, 5) # Automatic control velocity
+        self.cmd_nav_subscription = self.create_subscription(Twist, 'cmd_vel_nav', self.auto_cmd_callback, 5) # Automatic control velocity
+        self.cmd_nav_stamped_subscription = self.create_subscription(TwistStamped, 'cmd_vel_nav_stamped', self.auto_cmd_callback, 5) # Automatic control velocity
 
         # Service client for reading supply voltage
         self.cli = self.create_client(CORead, '/drive_left/sdo_read')
@@ -165,13 +167,20 @@ class CRSFNode(Node):
             twist.twist.angular.z = -rx / 100 * max_rot 
             self.get_logger().info(f"MANUAL:\t{twist.twist.linear.x:.01f} m/s\t{twist.twist.angular.z:.01f} rad/s")
             self.cmd_publisher.publish(twist)
+            self.cmdu_publisher.publish(twist.twist)
             self.do_kinematics(twist.twist.linear.x, twist.twist.angular.z)
 
     def auto_cmd_callback(self, msg):
         if self.state == 'run_auto':
-            self.get_logger().info(f"AUTO: {msg.twist.linear.x:.01f} m/s\t{msg.twist.angular.z:.01f} rad/s")
-            self.cmd_publisher.publish(msg)
-            self.do_kinematics(msg.twist.linear.x, msg.twist.angular.z)
+            twistStamped = msg
+            if type(msg) != TwistStamped:
+                twistStamped = TwistStamped()
+                twistStamped.twist = msg
+
+            self.get_logger().info(f"AUTO: {twistStamped.twist.linear.x:.01f} m/s\t{twistStamped.twist.angular.z:.01f} rad/s")
+            self.cmd_publisher.publish(twistStamped)
+            self.cmdu_publisher.publish(twistStamped.twist)
+            self.do_kinematics(twistStamped.twist.linear.x, twistStamped.twist.angular.z)
 
     def enter_kill(self):
         self.state = 'kill'

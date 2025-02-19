@@ -2,6 +2,7 @@
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="ardagv">
 
 	<xacro:arg name="sim_mode" default="false"/> <!-- true if running in simulation -->
+	<xacro:arg name="can_iface" default="can1"/>
 
 	<xacro:include filename="ardagv_ros2_control.urdf.xacro"/>
 	<xacro:include filename="ardagv_model.urdf.xacro"/>

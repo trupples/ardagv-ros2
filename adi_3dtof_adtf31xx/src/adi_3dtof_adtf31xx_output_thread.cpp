@@ -46,6 +46,7 @@ void ADI3DToFADTF31xx::adtf31xxSensorPushOutputNode(ADI3DToFADTF31xxOutputInfo *
     output_thread_mtx_.lock();
     last_node = (ADI3DToFADTF31xxOutputInfo *)output_node_queue_.back();
     output_thread_mtx_.unlock();
+    std::cerr << "(ioan) Output queue spill\n";
 
     // Copy the contents of new node into the old one and then delete the new node.
     last_node = new_output_node;
@@ -77,6 +78,9 @@ void ADI3DToFADTF31xx::processOutput()
         (ADI3DToFADTF31xxOutputInfo *)output_node_queue_.front();
       output_node_queue_.pop();
       output_thread_mtx_.unlock();
+  
+      std::cerr << "(ioan) Outputting frame with ID " << new_frame->frame_number_ << ", timestamp " << new_frame->frame_timestamp_ns_ << ". Queue size = " << debug_queue_size << "\n";
+      curr_frame_timestamp_ = rclcpp::Time(new_frame->frame_timestamp_ns_);
 
       // Publish other debug images
       if (enable_depth_ab_compression_) {
@@ -108,6 +112,8 @@ void ADI3DToFADTF31xx::processOutput()
     }
 
     // Sleep
-    std::this_thread::sleep_for(std::chrono::milliseconds(2));
+    // std::this_thread::sleep_for(std::chrono::milliseconds(2));
+    std::this_thread::yield();
+
   }
 }

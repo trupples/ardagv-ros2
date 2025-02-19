@@ -26,7 +26,7 @@ def generate_launch_description():
         ' name:=', name,
         ' can_iface:=', can_iface,
         ' config_dir:=', config_dir,
-        ' sim_mode:=', False,
+        ' sim_mode:=', 'False',
     ])
 
     # Launch all the things!
@@ -39,6 +39,7 @@ def generate_launch_description():
         parameters=[
             robot_control_config
         ],
+        remappings=[('~/robot_description', '/robot_description')],
         output="both"
     )
 
@@ -53,14 +54,14 @@ def generate_launch_description():
 
     joint_state_broadcaster_spawner = Node(
         package = "controller_manager", executable = "spawner",
-        arguments = ["joint_state_broadcaster", "--controller-manager", [TextSubstitution(text="/"), name, TextSubstitution(text="_controller_manager")]],
+        arguments = ["joint_state_broadcaster", "--controller-manager", "/controller_manager"],
         output="both",
     )
 
     # diff_drive_controller or forward_velocity_controller
     controller_spawner = Node(
         package = "controller_manager", executable = "spawner",
-        arguments = [LaunchConfiguration("controller"), "--controller-manager", [TextSubstitution(text="/"), name, TextSubstitution(text="_controller_manager")]],
+        arguments = [LaunchConfiguration("controller"), "--controller-manager", "/controller_manager"],
         output="both",
     )
     robot_localization_node = Node(
@@ -82,3 +83,4 @@ def generate_launch_description():
         joint_state_broadcaster_spawner,
         #robot_localization_node
     ])
+
