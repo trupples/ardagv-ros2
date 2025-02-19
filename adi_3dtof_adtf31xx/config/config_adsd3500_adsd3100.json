@@ -107,7 +107,7 @@
 			"radialThreshMin":	100
 		},
 		"configuration-parameters":	{
-			"fps": 20,
+			"fps": 10,
 			"headerSize":	128,
 			"xyzEnable":	1
 		}

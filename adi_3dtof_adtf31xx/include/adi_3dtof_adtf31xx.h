@@ -868,7 +868,7 @@ private:
     laser_scan_msg->angle_min = pc2laser_params_.angle_min;
     laser_scan_msg->angle_max = pc2laser_params_.angle_max;
     laser_scan_msg->angle_increment = pc2laser_params_.angle_increment;
-    laser_scan_msg->time_increment = 0.0;
+    laser_scan_msg->time_increment = 0.1;
     laser_scan_msg->scan_time = pc2laser_params_.scan_time;
     laser_scan_msg->range_min = pc2laser_params_.range_min;
     laser_scan_msg->range_max = pc2laser_params_.range_max;

@@ -37,6 +37,12 @@ def generate_launch_description():
             "use_inf,": "True",
             # Determines the value added to max range when use_infs parameter is set to false.
             "inf_epsilon,": "1.0",
+
+
+            "arg_enable_depth_publish": "True",
+            "arg_enable_ab_publish": "False",
+            "arg_enable_conf_publish": "False",
+            "arg_enable_point_cloud_publish": "True",
         }.items(),
     )
 
