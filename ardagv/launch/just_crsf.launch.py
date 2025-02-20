@@ -1,18 +1,15 @@
 from launch import LaunchDescription
 from launch_ros.actions import Node
+from launch.substitutions import PathJoinSubstitution
+from ament_index_python.packages import get_package_share_directory
 
 def generate_launch_description():
+    params_file = PathJoinSubstitution([get_package_share_directory("ardagv"), "config", "crsf.yaml"])
     return LaunchDescription([
         Node(
             package='ardagv_crsf',
             executable='ardagv_crsf',
-            ros_arguments=['-p', "uart:='/dev/ttymxc3'"],
-            remappings=[
-                ('/muxd_vel_unstamped', '/diff_drive_controller/cmd_vel_unstamped'),
-                ('/muxd_fwd', '/forward_velocity_controller/command'),
-                ('/cmd_vel_nav', '/cmd_vel'),
-                ('/cmd_vel_nav_stamped', '/cmd_vel_stamped'),
-            ]
+            parameters=[params_file]
         )
     ])
 

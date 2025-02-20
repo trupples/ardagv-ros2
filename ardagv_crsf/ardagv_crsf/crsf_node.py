@@ -3,47 +3,99 @@ from rclpy.node import Node
 from crsf_parser import CRSFParser
 from crsf_parser.payloads import PacketsTypes
 from crsf_parser.handling import crsf_build_frame
-from std_msgs.msg import String, Int16MultiArray, Float64MultiArray 
+from std_msgs.msg import String, Int16MultiArray, Float64MultiArray, Bool 
 from canopen_interfaces.srv import CORead # SDO read service
 from geometry_msgs.msg import TwistStamped, Twist
 from std_srvs.srv import Trigger
 from serial import Serial
+import math
 
 class CRSFNode(Node):
+    """
+    Listens to ExpressLRS CRSF transceiver.
+    
+    ## Joystick
+
+    Publishes right joystick.
+
+    Topics:
+    - `/cmd_vel_joy` Twist
+    - `/cmd_vel_joy_stamped` TwistStamped
+
+    Params:
+    - `poll_rate` : Rate at which to check RC control values
+    - `min_joy_pos` : Minimum joystick deviation from (0,0) to publish cmd_vel
+    - `max_vel` : Maximum linear velocity
+    - `max_rot` : Maximum angular velocity
+
+    ## Battery telemetry
+
+    Reports current battery voltage (read via SDO) to CRSF.
+
+    Params:
+    - `battery_poll_period` : Period between battery voltage measurements
+    - `battery_sdo_service` : Service to use for reading battery voltage SDO
+
+    ## Killswitch
+
+    Switch SA acts as a killswitch.
+
+    Params:
+    - `kill_sequence` : List of services to call on killswitch enable
+    - `init_sequence` : List of services to call on killswitch disable
+
+    """
+
     def __init__(self):
         super().__init__('crsf')
-        self.cmd_publisher = self.create_publisher(TwistStamped, 'muxd_vel', 1) # Multiplexed velocity
-        self.cmdu_publisher = self.create_publisher(Twist, 'muxd_vel_unstamped', 1) # Multiplexed velocity
-        self.forward_publisher = self.create_publisher(Float64MultiArray, 'muxd_fwd', 1) # Multiplexed forward kinematics
 
-        self.channel_publisher = self.create_publisher(Int16MultiArray, 'channels', 1)
-        self.cmd_nav_subscription = self.create_subscription(Twist, 'cmd_vel_nav', self.auto_cmd_callback, 5) # Automatic control velocity
-        self.cmd_nav_stamped_subscription = self.create_subscription(TwistStamped, 'cmd_vel_nav_stamped', self.auto_cmd_callback, 5) # Automatic control velocity
+        self.declare_parameter('poll_rate', 20)
+        self.declare_parameter('min_joy_pos', 0.01)
+        self.declare_parameter('max_vel', 0.5)
+        self.declare_parameter('max_rot', 1.0)
+        self.declare_parameter('battery_poll_period', 1)
+        self.declare_parameter('battery_sdo_service', '/drive_left/sdo_read')
+        self.declare_parameter('kill_sequence', ['/drive_left/halt', '/drive_right/halt'])
+        self.declare_parameter('init_sequence', ['/drive_left/init', '/drive_right/init'])
+
+        self.poll_rate = self.get_parameter('poll_rate').value
+        self.min_joy_pos = self.get_parameter('min_joy_pos').value
+        self.max_vel = self.get_parameter('max_vel').value
+        self.max_rot = self.get_parameter('max_rot').value
+        self.battery_poll_period = self.get_parameter('battery_poll_period').value
+        self.battery_sdo_service = self.get_parameter('battery_sdo_service').value
+        self.kill_sequence = self.get_parameter('kill_sequence').value
+        self.init_sequence = self.get_parameter('init_sequence').value
+
+        # Publishers
+        self.cmd_publisher = self.create_publisher(TwistStamped, 'cmd_vel_joy_stamped', 1)
+        self.cmdu_publisher = self.create_publisher(Twist, 'cmd_vel_joy', 1)
+        self.kill_publisher = self.create_publisher(Bool, 'killswitch', 1)
+
+        # Timers
+        self.fast_timer = self.create_timer(1.0 / self.poll_rate, self.fast_timer_callback)
+        self.battery_timer = self.create_timer(self.battery_poll_period, self.battery_timer_callback)
 
         # Service client for reading supply voltage
-        self.cli = self.create_client(CORead, '/drive_left/sdo_read')
+        self.cli = self.create_client(CORead, self.battery_sdo_service)
 
         # Service clients to stop / start the motors
         motors = ['/drive_left', '/drive_right']
         self.stop_services = [
-            self.create_client(Trigger, motor + "/halt") for motor in motors
+            self.create_client(Trigger, service) for service in self.kill_sequence
         ]
         self.start_services = [
-            self.create_client(Trigger, motor + "/" + action) for motor in motors for action in ["init", "velocity_mode"]
+            self.create_client(Trigger, service) for service in self.init_sequence
         ]
         self.service_call_queue = []
 
         # Wait for services to become available
-        self.get_logger().info(f"Waiting for motor nodes {motors} to become available:")
         for cli in [self.cli] + self.stop_services + self.start_services:
             self.get_logger().info(f"Waiting for service {cli.srv_name}")
             while not cli.wait_for_service(timeout_sec=5.0):
                 self.get_logger().info(f"Waiting for service {cli.srv_name}")
 
-        self.fast_timer = self.create_timer(0.1, self.fast_timer_callback)
-        self.battery_timer = self.create_timer(1, self.battery_timer_callback)
-
-        self.get_logger().info("All services up!")
+        # CRSF setup
         self.serial = Serial("/dev/ttymxc3", 420000, timeout=0.01)
 
         self.channels = []
@@ -55,6 +107,7 @@ class CRSFNode(Node):
         self.crsf_parser = CRSFParser(crsf_callback)
 
         self.state = 'init' # init -[kill switch on]-> kill -[kill switch off]-> run -[kill switch on]-> kill
+        self.previous_was_static = True
 
     def service_queue_process(self, result):
         if not self.service_call_queue:
@@ -95,14 +148,18 @@ class CRSFNode(Node):
             self.get_logger().error("Couldn't get battery voltage")
             return
 
-
-        v = res.data # Happily enough, the TMC reports in 100mV units, and CRSF expects 100mV units
-        rem = ((v*0.1) / 3 - 3) / (4.2 - 3) * 100 # Rough percentage if 3V = 0% and 4.2V = 100%
+        # TODO configure min/max overall voltage, capacity
+        min_voltage = 3
+        max_voltage = 4.2
+        num_batteries = 3
+        v = res.data * 0.1
+        v_1s = v * 0.1 / num_batteries
+        rem = (v_1s - min_voltage) / (max_voltage - min_voltage) * 100
         if rem < 0:
             rem = 0
-        self.get_logger().info(f'battery {v*0.1:.1f} V')
+        self.get_logger().info(f'battery {v:.1f} V')
 
-        battery_frame = crsf_build_frame(PacketsTypes.BATTERY_SENSOR, {"voltage": v, "current": 1, "capacity": 100, "remaining": int(rem)})
+        battery_frame = crsf_build_frame(PacketsTypes.BATTERY_SENSOR, {"voltage": int(v * 10 + 0.5), "current": 0, "capacity": 6000, "remaining": int(rem)})
 
         self.serial.write(battery_frame)
 
@@ -119,17 +176,17 @@ class CRSFNode(Node):
         # self.get_logger().info(f"{self.incoming=}")
         self.crsf_parser.parse_stream(self.incoming) # May call crsf_callback
         
-        if not self.channels:
+        # Wait for initialization / deinitialization sequence to finish
+        if self.service_call_queue:
             return
 
-        channel_msg = Int16MultiArray()
-        channel_msg.data = self.channels_decoded
-        self.channel_publisher.publish(channel_msg)
+        # No channel data yet
+        if not self.channels:
+            return
 
         # Parse channels
         # rx, ry, lx, ly = x, y values of right / left stick
         rx, ry, ly, lx, sa, sb, sc, sd, se, sf = [(x - 1500) / 5 for x in self.channels_decoded] # Map 1000..2000 to -100..100
-        # print(f"{rx=}\t{ry=}\t{lx=}\t{ly=}\t{sa=}\t{sb=}\t{sc=}\t{sd=}\t{se=}\t{sf=}")
 
         if self.state == 'init':
             if sa > 0:
@@ -148,71 +205,45 @@ class CRSFNode(Node):
         if sa < 0:
             self.enter_kill()
             return
+        
+        if math.hypot(rx / 100, ry / 100) < self.min_joy_pos:
+            if self.previous_was_static:
+                return
 
-        if sd > 0:
-            if self.state != 'run_auto':
-                self.get_logger().info("MODE: RUNNING AUTO")
-            self.state = 'run_auto'
+            self.previous_was_static = True
         else:
-            if self.state != 'run_manual':
-                self.get_logger().info("MODE: RUNNING MANUAL")
-            self.state = 'run_manual'
+            self.previous_was_static = False
 
-            max_vel = 0.5 # m/s
-            max_rot = 1 # rad/s
-
-            twist = TwistStamped()
-            twist.header.frame_id = 'base_link'
-            twist.twist.linear.x = ry / 100 * max_vel
-            twist.twist.angular.z = -rx / 100 * max_rot 
-            self.get_logger().info(f"MANUAL:\t{twist.twist.linear.x:.01f} m/s\t{twist.twist.angular.z:.01f} rad/s")
-            self.cmd_publisher.publish(twist)
-            self.cmdu_publisher.publish(twist.twist)
-            self.do_kinematics(twist.twist.linear.x, twist.twist.angular.z)
-
-    def auto_cmd_callback(self, msg):
-        if self.state == 'run_auto':
-            twistStamped = msg
-            if type(msg) != TwistStamped:
-                twistStamped = TwistStamped()
-                twistStamped.twist = msg
-
-            self.get_logger().info(f"AUTO: {twistStamped.twist.linear.x:.01f} m/s\t{twistStamped.twist.angular.z:.01f} rad/s")
-            self.cmd_publisher.publish(twistStamped)
-            self.cmdu_publisher.publish(twistStamped.twist)
-            self.do_kinematics(twistStamped.twist.linear.x, twistStamped.twist.angular.z)
+        cmd = TwistStamped()
+        cmd.header.frame_id = 'base_link'
+        cmd.twist.linear.x = ry / 100 * self.max_vel
+        cmd.twist.angular.z = -rx / 100 * self.max_rot
+        self.get_logger().info(f"MANUAL:\t{cmd.twist.linear.x:.01f} m/s\t{cmd.twist.angular.z:.01f} rad/s")
+        self.cmd_publisher.publish(cmd)
+        self.cmdu_publisher.publish(cmd.twist)
 
     def enter_kill(self):
         self.state = 'kill'
-        self.get_logger().info("MODE: KILLSWITCH")
+        b = Bool()
+        b.data = True
+        self.kill_publisher.publish(b)
+        self.get_logger().info("KILLSWITCH")
 
         twist = TwistStamped() # Defaults to all zeros
         twist.header.frame_id = 'base_link'
         self.cmd_publisher.publish(twist)
-
-        self.do_kinematics(0, 0)
 
         for cli in self.stop_services:
             cli.call_async(Trigger.Request()) # Stop asynchronously to ensure fast response
 
     def enter_run(self):
         self.state = 'run' # Will be shortly changed to run_manual or run_auto
-        self.get_logger().info("MODE: RUNNING")
+        b = Bool()
+        b.data = False
+        self.kill_publisher.publish(b)
+        self.get_logger().info("INITIALIZING")
 
         self.queue_up_service_calls([(cli, Trigger.Request()) for cli in self.start_services])
-
-    def do_kinematics(self, linear, angular):
-        # Substitute for diff drive node because it acts up
-        w = 0.27 # m
-        r = 0.05 # m
-
-        vl, vr = linear - angular * w / 2, linear + angular * w / 2
-        wl, wr = vl / r, vr / r
-
-        forward = Float64MultiArray()
-        forward.data = [wl, wr]
-        self.forward_publisher.publish(forward)
-        self.get_logger().debug("Kinematics: {wl=:.01} {wr=:.01}")
 
 def main(args=None):
     rclpy.init(args=args)
@@ -226,4 +257,5 @@ def main(args=None):
 
 if __name__ == '__main__':
     main()
+
 

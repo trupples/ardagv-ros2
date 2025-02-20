@@ -12,24 +12,29 @@ def generate_launch_description():
     # Declare launch arguments
     decl_name = DeclareLaunchArgument('name', default_value='ardagv')
     decl_can_iface = DeclareLaunchArgument('can_iface', default_value='can1')
-    decl_config_dir = DeclareLaunchArgument('config_dir', default_value=os.path.join(get_package_share_directory("ardagv_motors"), "config"))
     decl_controller = DeclareLaunchArgument('controller', default_value='diff_drive_controller')
 
     # Get launch arguments
     name = LaunchConfiguration('name')
     can_iface = LaunchConfiguration('can_iface')
-    config_dir = LaunchConfiguration('config_dir')
 
     # Compute URDF from macros
     robot_description = Command([
         'xacro ', PathJoinSubstitution([get_package_share_directory("ardagv"), "urdf", "ardagv_all.urdf.xacro"]),
         ' name:=', name,
         ' can_iface:=', can_iface,
-        ' config_dir:=', config_dir,
         ' sim_mode:=', 'False',
     ])
 
     # Launch all the things!
+
+    # Twist mux
+    twist_mux_node = Node(
+        package="twist_mux",
+        executable="twist_mux",
+        remappings={('/cmd_vel_out', '/diff_drive_controller/cmd_vel_unstamped')},
+        parameters=[PathJoinSubstitution([get_package_share_directory("ardagv"), "config", "twist_mux.yaml"])]
+    )
 
     # ros2_control controller_manager
     robot_control_config = PathJoinSubstitution([get_package_share_directory("ardagv"), "config", "ros2_controllers.yaml"])
@@ -75,12 +80,12 @@ def generate_launch_description():
     return LaunchDescription([
         decl_name,
         decl_can_iface,
-        decl_config_dir,
         decl_controller,
         controller_manager_node,
         robot_state_publisher,
         controller_spawner,
         joint_state_broadcaster_spawner,
-        #robot_localization_node
+        # robot_localization_node,
+        twist_mux_node
     ])
 
