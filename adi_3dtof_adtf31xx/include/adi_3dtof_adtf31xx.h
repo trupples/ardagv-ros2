@@ -434,7 +434,7 @@ private:
   int max_input_queue_length_ = 10;
   std::queue<ADI3DToFADTF31xxFrameInfo *> input_frames_queue_;
 
-  int max_debug_queue_length_ = 10;
+  int max_debug_queue_length_ = 2;
   std::queue<ADI3DToFADTF31xxOutputInfo *> output_node_queue_;
 
   bool enable_jblf_filter_ = false;
@@ -863,12 +863,12 @@ private:
     auto laser_scan_msg = std::make_shared<sensor_msgs::msg::LaserScan>();
 
     laser_scan_msg->header.stamp = curr_frame_timestamp_;
-    laser_scan_msg->header.frame_id = camera_link_;
+    laser_scan_msg->header.frame_id = std::string("cam1_laser");
 
     laser_scan_msg->angle_min = pc2laser_params_.angle_min;
     laser_scan_msg->angle_max = pc2laser_params_.angle_max;
     laser_scan_msg->angle_increment = pc2laser_params_.angle_increment;
-    laser_scan_msg->time_increment = 0.0;
+    laser_scan_msg->time_increment = 0.1;
     laser_scan_msg->scan_time = pc2laser_params_.scan_time;
     laser_scan_msg->range_min = pc2laser_params_.range_min;
     laser_scan_msg->range_max = pc2laser_params_.range_max;

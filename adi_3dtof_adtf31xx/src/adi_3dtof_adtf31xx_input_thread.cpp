@@ -41,7 +41,8 @@ ADI3DToFADTF31xxFrameInfo * ADI3DToFADTF31xx::adtf31xxSensorGetNextFrame()
     }
     if (inframe == nullptr) {
       // Wait for the buffers to be filled
-      std::this_thread::sleep_for(std::chrono::milliseconds(2));
+      // std::this_thread::sleep_for(std::chrono::milliseconds(2));
+	    std::this_thread::yield();
     }
   }
   return inframe;
@@ -121,7 +122,8 @@ void ADI3DToFADTF31xx::readInput()
     }
 
     // sleep
-    std::this_thread::sleep_for(std::chrono::milliseconds(2));
+    // std::this_thread::sleep_for(std::chrono::milliseconds(2));
+    std::this_thread::yield();
   }
 
   // Destroy the queue

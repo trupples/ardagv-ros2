@@ -8,6 +8,10 @@
   <license>TODO: License declaration</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
+ 
+  <!-- Sim components: -->
+  <depend>gazebo_ros_pkgs</depend>
+  <depend>gazebo_ros2_control</depend>
 
   <!-- Our components: -->
   <depend>ardagv_crsf</depend>
@@ -21,6 +25,9 @@
   <depend>forward_command_controller</depend>
   <depend>controller_manager</depend>
   <depend>xacro</depend>
+  <depend>nav2_map_server</depend>
+  <depend>nav2_amcl</depend>
+  <depend>nav2_lifecycle_manager</depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>

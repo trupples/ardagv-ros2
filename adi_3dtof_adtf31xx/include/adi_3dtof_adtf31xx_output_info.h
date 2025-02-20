@@ -103,6 +103,7 @@ public:
   }
 
   int frame_number_;
+  unsigned long long frame_timestamp_ns_;
   unsigned short * depth_frame_;
   unsigned short * ab_frame_;
   unsigned short * conf_frame_;
