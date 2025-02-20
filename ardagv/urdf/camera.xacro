@@ -44,7 +44,7 @@
     <gazebo reference="cam1_adtf31xx">
         <material>Gazebo/Black</material>
 
-        <sensor name="camera" type="camera">
+        <sensor name="cam1" type="camera">
             <pose> 0 0 0 0 0 0 </pose>
             <visualize>true</visualize>
             <update_rate>10</update_rate>
