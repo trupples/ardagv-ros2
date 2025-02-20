@@ -17,6 +17,20 @@ def generate_launch_description():
                 )]), launch_arguments={'use_sim_time': 'true'}.items()
     )
 
+    twist_mux_params = os.path.join(get_package_share_directory(package_name),'config','twist_mux.yaml')
+    twist_mux = Node(
+            package="twist_mux",
+            executable="twist_mux",
+            parameters=[twist_mux_params, {'use_sim_time': True}],
+            remappings=[('/cmd_vel_out','/diff_drive_controller/cmd_vel_unstamped')]
+        )
+    
+    teleop_twist_keyboard = IncludeLaunchDescription(
+                PythonLaunchDescriptionSource([os.path.join(
+                    get_package_share_directory(package_name), 'launch', 'teleopt.launch.py'
+                )]), launch_arguments={'use_sim_time': 'true'}.items()
+    )
+
     gazebo_params_file = os.path.join(get_package_share_directory(package_name),'config','gazebo_params.yaml')
     world_file = os.path.join(get_package_share_directory(package_name), 'worlds', 'empty.world')
 
@@ -63,6 +77,8 @@ def generate_launch_description():
 
     return LaunchDescription([
         rsp,
+        twist_mux,
+        teleop_twist_keyboard,
         gazebo,
         spawn_entity,
         diff_drive_spawner,

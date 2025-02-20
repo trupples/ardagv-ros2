@@ -47,6 +47,16 @@ amcl:
     max_particles: 200
     min_particles: 50
 
+local_costmap:
+  local_costmap:
+    ros__parameters:
+      footprint: "[ [0.30, -0.15], [-0.30, -0.15], [-0.30, 0.15], [0.30, 0.15] ]" # updated footprint
+
+
+global_costmap:
+  global_costmap:
+    ros__parameters:
+      footprint: "[ [0.30, -0.15], [-0.30, -0.15], [-0.30, 0.15], [0.30, 0.15] ]" # updated footprint
 
 map_server:
   ros__parameters:
