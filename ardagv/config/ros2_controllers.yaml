@@ -32,11 +32,13 @@ diff_drive_controller:
     wheel_separation: 0.27
     wheel_radius: 0.05
 
-    position_feedback: false # TODO(ioan): do we actually have usable position feedback?
-
-    enable_odom_tf: True # set to False when using EKF odom tf
-
+    position_feedback: true
+    enable_odom_tf: true # set to False when using EKF odom tf
     use_stamped_vel: false
+
+    pose_covariance_diagonal: [0.005, 0.005, 0.0, 0.0, 0.0, 0.001]
+    twist_covariance_diagonal: [0.005, 0.005, 0.0, 0.0, 0.0, 0.001]
+
     # open_loop: false    
 
     # wheels_per_side: x
