@@ -2,10 +2,10 @@
 
 Connect to the Portenta X8 using hostname `portenta-arduino`, username `analog`, password `analog`.
 
-All relevant ros2 nodes are built inside the [shooteu/complete-agv-setup](https://hub.docker.com/r/shooteu/complete-agv-setup) docker image. Should be run with `--privileged` and `--network=host`:
+All relevant ros2 nodes are built inside the [shooteu/full-agv-setup](https://hub.docker.com/r/shooteu/full-agv-setup) docker image. The following flags (except for `--name`) are important:
 
 ```
-docker run -itd --privileged --network=host --name=ros --cap-add=NET_ADMIN shooteu/full-agv-setup:2025-02-14
+docker run --privileged --network=host --cap-add=NET_ADMIN -itd --name=ros shooteu/full-agv-setup:2025-02-14
 ```
 
 Inside the docker container, source `/home/runner/ros2_ws/install/setup.sh`.
