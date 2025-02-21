@@ -226,4 +226,10 @@ You may check that the root partition is now larger (15GB) using `df -h`.
 
 [Install docker as per the official Debian instructions.](https://docs.docker.com/engine/install/debian/)
 
+Temporary fix for 28.0 iptables issue:
+```
+sudo apt-get remove docker-ce docker-ce-rootless-extras
+sudo apt-get install docker-ce=5:27.5.1-1~debian.12~bookworm docker-ce-rootless-extras=5:27.5.1-1~debian.12~bookworm
+```
+
 With this done, you may proceed to the steps at the beginning of the file.
