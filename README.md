@@ -5,10 +5,15 @@ Connect to the Portenta X8 using hostname `portenta-arduino`, username `analog`,
 All relevant ros2 nodes are built inside the [shooteu/complete-agv-setup](https://hub.docker.com/r/shooteu/complete-agv-setup) docker image. Should be run with `--privileged` and `--network=host`:
 
 ```
-docker run -itd --privileged --network=host --name=ros shooteu/full-agv-setup:2025-02-14
+docker run -itd --privileged --network=host --name=ros --cap-add=NET_ADMIN shooteu/full-agv-setup:2025-02-14
 ```
 
-Inside the docker container, source `ros2_ws/install/setup.sh`.
+Inside the docker container, source `/home/runner/ros2_ws/install/setup.sh`.
+
+Flags justified:
+- `--privileged` used to allow full access to hardware devices. ToF, IMU, UART would otherwise require a laundry list of `--device` flags and careful permissions setup across dozens of device files.
+- `--network=host` required for exposing the CAN interface. Can't `docker run -p` CAN. This sometimes breaks ros when communicating between two containers, so we run everything from the same container with `ros exec`.
+- `--cap-add=NET_ADMIN` required for the Lely CANopen library (used as the foundation of the ros2 canopen stack) to initialize the CAN interface without `sudo`. Without this, you must first run the ros2_control stack as sudo (which will initialize the interface but for some reason won't accept any commands), then re-run as a normal user (which will be able to open the interface and accept commands).
 
 # ROS2 nodes
 
