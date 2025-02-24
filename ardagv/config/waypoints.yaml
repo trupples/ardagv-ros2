@@ -1,0 +1,17 @@
+waypoints:
+  - frame_id: "map"
+    pose:
+      position: {x: 0.2, y: 0.35, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - frame_id: "map"
+    pose:
+      position: {x: 2.8, y: 0.35, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 1.0, w: 0.0}
+  - frame_id: "map"
+    pose:
+      position: {x: 2.8, y: 1.65, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}
+  - frame_id: "map"
+    pose:
+      position: {x: 0.2, y: 1.65, z: 0.0}
+      orientation: {x: 0.0, y: 0.0, z: 1.0, w: 0.0}

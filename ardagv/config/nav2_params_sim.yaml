@@ -14,24 +14,24 @@ amcl:
     global_frame_id: "map"
     lambda_short: 0.1
     laser_likelihood_max_dist: 0.1 # 10cm bubble around obstacles
-    laser_max_range: 100.0
-    laser_min_range: -1.0
+    laser_max_range: 5.0
+    laser_min_range: 0.3
     laser_model_type: "likelihood_field"
-    max_beams: 360        # no of beams/rays used in the particle filter scan
-    max_particles: 200    # max number of particles for localization
-    min_particles: 50     # min number of particles for localization
+    max_beams: 180        # no of beams/rays used in the particle filter scan
+    max_particles: 400    # max number of particles for localization
+    min_particles: 200    # min number of particles for localization
     odom_frame_id: "odom"
-    pf_err: 0.05
+    pf_err: 0.02
     pf_z: 0.99
     recovery_alpha_fast: 0.1    # increased from 0.0
     recovery_alpha_slow: 0.0001 # increased from 0.0
-    resample_interval: 1
+    resample_interval: 2
     robot_model_type: "nav2_amcl::DifferentialMotionModel"
     save_pose_rate: 0.5
-    sigma_hit: 0.05  # 5cm stddev on distances
+    sigma_hit: 0.02  # 5cm stddev on distances
     tf_broadcast: true
     transform_tolerance: 1.0
-    update_min_a: 0.2   # 10deg per update
+    update_min_a: 0.1   # 5deg per update
     update_min_d: 0.03  # 3cm per update
     z_hit: 0.5
     z_max: 0.05
@@ -44,7 +44,8 @@ amcl:
       x: 0.0
       y: 0.0
       z: 0.0
-      yaw: 0.0
+      #yaw: 0.0
+      yaw: -1.5708
 
 bt_navigator:
   ros__parameters:
@@ -140,8 +141,8 @@ controller_server:
     general_goal_checker:
       stateful: True
       plugin: "nav2_controller::SimpleGoalChecker"
-      xy_goal_tolerance: 0.25
-      yaw_goal_tolerance: 0.25
+      xy_goal_tolerance: 0.05  # 5 cm
+      yaw_goal_tolerance: 0.02 # 12 degrees
     # DWB parameters
     FollowPath:
       plugin: "dwb_core::DWBLocalPlanner"
@@ -169,7 +170,7 @@ controller_server:
       linear_granularity: 0.05
       angular_granularity: 0.025
       transform_tolerance: 0.2
-      xy_goal_tolerance: 0.25
+      xy_goal_tolerance: 0.05 # 5 cm
       trans_stopped_velocity: 0.25
       short_circuit_trajectory_evaluation: True
       stateful: True
@@ -197,12 +198,13 @@ local_costmap:
       width: 3
       height: 3
       resolution: 0.05
-      footprint: "[ [0.30, -0.15], [-0.30, -0.15], [-0.30, 0.15], [0.30, 0.15] ]" # updated footprint
+      robot_radius: 0.34
+      #footprint: "[ [0.30, -0.15], [-0.30, -0.15], [-0.30, 0.15], [0.30, 0.15] ]" # updated footprint
       plugins: ["voxel_layer", "inflation_layer"]
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         cost_scaling_factor: 3.0
-        inflation_radius: 0.1
+        inflation_radius: 0.05
       voxel_layer:
         plugin: "nav2_costmap_2d::VoxelLayer"
         enabled: True
@@ -236,7 +238,7 @@ global_costmap:
       global_frame: map
       robot_base_frame: base_link
       use_sim_time: True
-      footprint: "[ [0.30, -0.15], [-0.30, -0.15], [-0.30, 0.15], [0.30, 0.15] ]" # updated footprint
+      footprint: "[ [0.34, -0.15], [-0.34, -0.15], [-0.34, 0.15], [0.34, 0.15] ]" # updated footprint
       resolution: 0.05
       track_unknown_space: true
       plugins: ["static_layer", "obstacle_layer", "inflation_layer"]
@@ -260,7 +262,7 @@ global_costmap:
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         cost_scaling_factor: 3.0
-        inflation_radius: 0.1
+        inflation_radius: 0.05
       always_send_full_costmap: True
 
 map_server:
