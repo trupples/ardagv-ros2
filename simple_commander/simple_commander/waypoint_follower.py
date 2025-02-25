@@ -1,27 +1,29 @@
 #! /usr/bin/env python3
-# Copyright 2021 Samsung Research America
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 from geometry_msgs.msg import PoseStamped
 from nav2_simple_commander.robot_navigator import BasicNavigator, TaskResult
+from example_interfaces.srv import SetBool
+from rclpy.node import Node
+
 import rclpy
-from rclpy.duration import Duration
 
 """
 Basic navigation demo to go to poses.
 """
 
+class MinimalClientAsync(Node):
+
+    def __init__(self):
+        super().__init__('minimal_client_async')
+        self.cli = self.create_client(SetBool, 'elevator_to_robot')
+        while not self.cli.wait_for_service(timeout_sec=1.0):
+            self.get_logger().info('service not available, waiting again...')
+        self.req = SetBool.Request()
+
+    def send_request(self, start_elevator):
+        self.req.data = start_elevator # boolean for starting the elevator
+        self.future = self.cli.call_async(self.req)
+        rclpy.spin_until_future_complete(self, self.future)
+        return self.future.result()
 
 def main():
     rclpy.init()
@@ -29,11 +31,12 @@ def main():
     navigator = BasicNavigator()
 
     route = [
-        [1.10, 0.70, -0.707, -0.707],
-        [1.10, -0.70, -0.707, -0.707],
-        [-1.10, -0.70, -0.707, -0.707],
-        [-1.10, 0.70, -0.707, -0.707],
-        [1.10, 0.7, -0.707, -0.707]
+        [1.10, 0.70, 0.707, 0.707],     #  90
+        #[0.90, 0.70, 0.707, 0.707],    #  90
+        [1.10, -0.70, 0.707, -0.707],   # -90
+        [-1.10, -0.70, 0.707, -0.707],  # -90
+        [-1.10, 0.70, 0.707, 0.707],    #  90
+        [1.10, 0.7, 0.707, 0.707]       #  90
     ]
 
     # Set our demo's initial pose
@@ -45,7 +48,6 @@ def main():
     initial_pose.pose.orientation.w = 1.0
     initial_pose.pose.orientation.z = 0.0
     navigator.setInitialPose(initial_pose)
-
 
     # Wait for navigation to fully activate, since autostarting nav2
     navigator.waitUntilNav2Active()
@@ -68,17 +70,20 @@ def main():
             if feedback and timer % 10 == 0:
                 print("Executing current waypoint: " +
                       str(i) + '/' + str(len(route)))
-            #Duration(seconds=0.5).sleep()
-
+                
         result = navigator.getResult()
         if result == TaskResult.SUCCEEDED:
             print('Goal succeeded!')
+            minimal_client = MinimalClientAsync()
+            response = minimal_client.send_request(True) # send request to start elevator
+            minimal_client.get_logger().info(
+                'Result of receive_bool: for %s' %(response.success)) # receive response from elevator
+            minimal_client.destroy_node()
         elif result == TaskResult.CANCELED:
             print('Goal was canceled!')
         elif result == TaskResult.FAILED:
             print('Goal failed!')
-        
-        #sleep(Duration(seconds=1.0))
+
         i += 1
 
     exit(0)

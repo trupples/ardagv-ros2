@@ -44,8 +44,8 @@ amcl:
       x: 0.0
       y: 0.0
       z: 0.0
-      #yaw: 0.0
-      yaw: -1.5708
+      yaw: 0.0
+      #yaw: -1.5708
 
 bt_navigator:
   ros__parameters:
@@ -198,7 +198,7 @@ local_costmap:
       width: 3
       height: 3
       resolution: 0.05
-      robot_radius: 0.34
+      robot_radius: 0.36
       #footprint: "[ [0.30, -0.15], [-0.30, -0.15], [-0.30, 0.15], [0.30, 0.15] ]" # updated footprint
       plugins: ["voxel_layer", "inflation_layer"]
       inflation_layer:
@@ -238,7 +238,7 @@ global_costmap:
       global_frame: map
       robot_base_frame: base_link
       use_sim_time: True
-      footprint: "[ [0.34, -0.15], [-0.34, -0.15], [-0.34, 0.15], [0.34, 0.15] ]" # updated footprint
+      footprint: "[ [0.35, -0.17], [-0.35, -0.17], [-0.35 0.17], [0.35, 0.17] ]" # updated footprint
       resolution: 0.05
       track_unknown_space: true
       plugins: ["static_layer", "obstacle_layer", "inflation_layer"]

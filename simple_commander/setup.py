@@ -21,6 +21,7 @@ setup(
     entry_points={
         'console_scripts': [
             'waypoint_follower = simple_commander.waypoint_follower:main',
+            'elevator_server = simple_commander.elevator_server:main',
         ],
     },
 )
