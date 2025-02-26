@@ -42,10 +42,10 @@ class PoseTracker(Node):
         )
 
         self.demo_route = [
-            [-1.10, -0.70, 0.707, -0.707],  # -90
-            [-1.2, 0.60, 1.0, 0.0],        #   0
-            [1.10, -0.70, 0.707, 0.707],    #  90
-            [-1.10, -0.70, 0.707, -0.707],  # -90
+            [1.10, 0.70, 0.707, 0.707],     #  90 top-right
+            [1.20, -0.60, 0.0, 1.0],        # 180 top-left
+            [-1.20, 0.60, 1.0, 0.0],        #   0 bottom-right
+            [1.10, 0.70, 0.707, 0.707],     #  90 top-right
         ]
 
     def pose_callback(self, msg):
@@ -58,18 +58,22 @@ class PoseTracker(Node):
         start_x = self.current_pose.position.x
         start_y = self.current_pose.position.y
 
+        print(f"Moving backwards for {distance} meters")
+
         while True:
             self.cmd_vel_publisher.publish(twist)
             rclpy.spin_once(self, timeout_sec=0.1)
 
             current_pose = self.current_pose
-            #distance_moved = math.sqrt((current_pose.position.x - start_x) ** 2 + (current_pose.position.y - start_y) ** 2)
-            distance_moved = abs(current_pose.position.x - start_x)
+            distance_moved = math.sqrt((current_pose.position.x - start_x) ** 2 
+                                    + (current_pose.position.y - start_y) ** 2)
             if distance_moved >= distance:
                 break
 
         twist.linear.x = 0.0
         self.cmd_vel_publisher.publish(twist)
+
+        print("Finished moving backwards")
 
     def navigate(self):
         self.navigator.waitUntilNav2Active()
@@ -110,9 +114,8 @@ class PoseTracker(Node):
             elif result == TaskResult.FAILED:
                 print('Goal failed!')
 
-            if i == 2:
-                rclpy.spin_once(self, timeout_sec=1.0)
-                self.move_backwards(linear_velocity=0.10, distance=0.6)
+            rclpy.spin_once(self, timeout_sec=1.0)
+            self.move_backwards(linear_velocity=0.10, distance=0.6)
 
             i += 1
 
