@@ -20,6 +20,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+            'demo_run = simple_commander.demo_run:main',
             'waypoint_follower = simple_commander.waypoint_follower:main',
             'elevator_server = simple_commander.elevator_server:main',
         ],
