@@ -15,7 +15,7 @@ class MinimalService(Node):
         if request.data:
             print('Received request to start elevator')
             print("Waiting for elevator to pick up the box...")
-            time.sleep(3.0) # Simulate elevator picking up the box
+            time.sleep(6.0) # Simulate elevator picking up the box
             response.success = True
             response.message = 'Elevator done'
             print('Elevator done')

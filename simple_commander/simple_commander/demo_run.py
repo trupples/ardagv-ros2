@@ -42,10 +42,14 @@ class PoseTracker(Node):
         )
 
         self.demo_route = [
-            [1.10, 0.70, 0.707, 0.707],     #  90 top-right
-            [1.20, -0.60, 0.0, 1.0],        # 180 top-left
-            [-1.20, 0.60, 1.0, 0.0],        #   0 bottom-right
-            [1.10, 0.70, 0.707, 0.707],     #  90 top-right
+
+                    [0.5, 0.60, 0.707, -0.707],     #  -90 top-right
+                    [0.3, 0.60, 0.707, -0.707],     #  -90 top-right
+                    [0.5, -0.60, 0.707, -0.707],    #  -90 top-right
+                    [-1.2, 0.60, 0.707, -0.707],    #  -90 top-right
+                    #[1.20, -0.60, 0.0, 1.0],        # 180 top-left
+                    #[-1.20, 0.60, 1.0, 0.0],        #   0 bottom-right
+                    #[1.10, 0.70, 0.707, 0.707],     #  90 top-right
         ]
 
     def pose_callback(self, msg):
@@ -104,6 +108,9 @@ class PoseTracker(Node):
             result = self.navigator.getResult()
             if result == TaskResult.SUCCEEDED:
                 print('Goal succeeded!')
+                rclpy.spin_once(self, timeout_sec=1.0)
+                if i == 1 or i ==3:
+                     self.move_backwards(linear_velocity=0.05, distance=0.45)
                 minimal_client = MinimalClientAsync()
                 response = minimal_client.send_request(True) # send request to start elevator
                 minimal_client.get_logger().info(
@@ -113,9 +120,6 @@ class PoseTracker(Node):
                 print('Goal was canceled!')
             elif result == TaskResult.FAILED:
                 print('Goal failed!')
-
-            rclpy.spin_once(self, timeout_sec=1.0)
-            self.move_backwards(linear_velocity=0.10, distance=0.6)
 
             i += 1
 
